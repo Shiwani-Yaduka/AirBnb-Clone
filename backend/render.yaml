@@ -2,6 +2,7 @@ services:
   - type: web
     name: airbnb-clone-backend
     runtime: docker
+    rootDir: backend
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
@@ -17,6 +18,6 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: '["https://airbnbscaler.vercel.app", "https://frontend-o750idayc-shinnys-projects-9c6a53f6.vercel.app"]'
+        value: '["https://airbnbscaler.vercel.app", "https://frontend-five-delta-jd5izd9evc.vercel.app"]'
       - key: PUBLIC_URL
-        value: https://airbnb-clone-backend.onrender.com
+        value: https://airbnb-clone-backend-dkav.onrender.com
