@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: airbnb-clone-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////data/airbnb_clone.db
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: '["https://YOUR-VERCEL-APP.vercel.app"]'
+    disk:
+      name: airbnb-clone-data
+      mountPath: /data
+      sizeGB: 1
