@@ -13,7 +13,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: '["https://YOUR-VERCEL-APP.vercel.app"]'
+        value: '["https://airbnbscaler.vercel.app", "https://frontend-o750idayc-shinnys-projects-9c6a53f6.vercel.app"]'
     disk:
       name: airbnb-clone-data
       mountPath: /data
