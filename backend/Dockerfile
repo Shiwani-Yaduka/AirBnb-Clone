@@ -7,8 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-# SQLite file lives on a mounted persistent disk in production (see render.yaml).
-ENV DATABASE_URL=sqlite:////data/airbnb_clone.db
+# No persistent disk on Render's free plan: the SQLite file lives in the container's
+# own ephemeral filesystem and resets on every redeploy/restart (see keep_alive.py,
+# which stops idle-timeout restarts, but not deploy-triggered ones).
+ENV DATABASE_URL=sqlite:////app/airbnb_clone.db
 ENV ENVIRONMENT=production
 
 EXPOSE 8000

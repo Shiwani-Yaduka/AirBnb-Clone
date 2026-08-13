@@ -4,11 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.keep_alive import start_keep_alive
 from app.routers import amenities, auth, bookings, listings, reviews, users
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Airbnb Clone API", version="1.0.0")
+
+
+@app.on_event("startup")
+def _on_startup() -> None:
+    start_keep_alive()
 
 app.add_middleware(
     CORSMiddleware,

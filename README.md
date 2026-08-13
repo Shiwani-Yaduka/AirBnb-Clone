@@ -148,13 +148,20 @@ map is) — that bonus item was left out for time, as was dark mode.
 
 ## Deployment
 
-- **Frontend → Vercel**: import the repo, set the project's Root Directory to
-  `frontend`, and set `NEXT_PUBLIC_API_URL` to your deployed backend URL.
+- **Frontend → Vercel**: live at https://airbnbscaler.vercel.app. Root Directory
+  is `frontend`, `NEXT_PUBLIC_API_URL` points at the Render backend.
 - **Backend → Render**: `backend/render.yaml` + `backend/Dockerfile` define a
-  Docker web service with a persistent disk mounted at `/data` (SQLite needs
-  real disk, so a serverless host won't retain data). Set `CORS_ORIGINS` to
-  your Vercel URL and redeploy. The seed script runs automatically on first
-  boot only — it's idempotent and never overwrites existing data.
+  Docker web service. Render's free plan doesn't support persistent disks, so
+  the SQLite file lives in the container's own ephemeral filesystem — it
+  survives normal use (thanks to the keep-alive self-ping below) but resets on
+  every redeploy/restart, re-seeding automatically since `seed.py` is
+  idempotent. Set `CORS_ORIGINS` to your Vercel URL.
+- **Keep-alive**: Render's free instances spin down after 15 minutes idle,
+  which would otherwise wipe the ephemeral SQLite file on every cold start
+  during normal browsing gaps. `backend/app/core/keep_alive.py` runs a
+  background thread (production only, gated on `PUBLIC_URL`) that pings its
+  own `/health` endpoint every 3–14 minutes to stay warm. This does not
+  survive an actual redeploy — only idle timeouts.
 - Because the frontend and backend end up on different domains in production,
   the session cookie is issued as `SameSite=None; Secure` there (see
   `ENVIRONMENT=production` in `backend/core/config.py`); locally it's

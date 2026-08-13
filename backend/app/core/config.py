@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # "production": frontend/backend are on different domains (e.g. vercel.app / onrender.com),
     # which is cross-site, so the cookie must be SameSite=None + Secure (HTTPS-only) to be sent.
     environment: str = "development"
+    # Own public URL, e.g. https://airbnb-clone-backend.onrender.com. Set only in production;
+    # used to self-ping and stop Render's free-tier instance from spinning down when idle.
+    public_url: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

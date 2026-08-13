@@ -5,16 +5,18 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
+    # No persistent disk: Render's free plan doesn't support one. The SQLite file
+    # lives in the container's ephemeral filesystem and resets on redeploy/restart.
+    # PUBLIC_URL + keep_alive.py stop the free-tier 15-min idle spin-down from
+    # triggering that reset during normal use, but a real redeploy still wipes it.
     envVars:
       - key: DATABASE_URL
-        value: sqlite:////data/airbnb_clone.db
+        value: sqlite:////app/airbnb_clone.db
       - key: ENVIRONMENT
         value: production
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
         value: '["https://airbnbscaler.vercel.app", "https://frontend-o750idayc-shinnys-projects-9c6a53f6.vercel.app"]'
-    disk:
-      name: airbnb-clone-data
-      mountPath: /data
-      sizeGB: 1
+      - key: PUBLIC_URL
+        value: https://airbnb-clone-backend.onrender.com
