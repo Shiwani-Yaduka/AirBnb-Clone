@@ -1,64 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { SearchBar } from "../search/SearchBar";
 import { UserMenu } from "./UserMenu";
 import { Modal } from "../ui/Modal";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
-import { CATEGORY_META } from "@/lib/constants";
-import type { Category } from "@/lib/types";
+import { GlobeIcon, HomesIcon, BalloonIcon, BellIcon } from "./NavIcons";
 
-const CATEGORIES = Object.keys(CATEGORY_META) as Category[];
-
-// Reads/writes the `category` query param so the nav stays in sync with the home page grid.
-function CategoryNav() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const active = searchParams.get("category") as Category | null;
-
-  function select(category: Category | null) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (category) params.set("category", category);
-    else params.delete("category");
-    router.push(`/?${params.toString()}`);
-  }
-
-  return (
-    <nav className="scrollbar-none hidden min-w-0 flex-1 items-center gap-6 overflow-x-auto md:flex">
-      <button
-        onClick={() => select(null)}
-        className={`flex shrink-0 flex-col items-center gap-1.5 border-b-2 pb-3 pt-1 text-xs font-medium transition ${
-          active === null ? "border-neutral-900 text-neutral-900" : "border-transparent text-neutral-500 hover:text-neutral-900"
-        }`}
-      >
-        <span className="text-xl leading-none">🌐</span>
-        All
-      </button>
-      {CATEGORIES.map((category) => {
-        const meta = CATEGORY_META[category];
-        const isActive = active === category;
-        return (
-          <button
-            key={category}
-            onClick={() => select(isActive ? null : category)}
-            className={`flex shrink-0 flex-col items-center gap-1.5 border-b-2 pb-3 pt-1 text-xs font-medium transition ${
-              isActive ? "border-neutral-900 text-neutral-900" : "border-transparent text-neutral-500 hover:text-neutral-900"
-            }`}
-          >
-            <span className="text-xl leading-none">{meta.emoji}</span>
-            {meta.label}
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
+const NAV_TABS = [
+  { key: "all", label: "All", Icon: GlobeIcon },
+  { key: "homes", label: "Homes", Icon: HomesIcon },
+  { key: "experiences", label: "Experiences", Icon: BalloonIcon },
+  { key: "services", label: "Services", Icon: BellIcon },
+] as const;
 
 export function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<(typeof NAV_TABS)[number]["key"]>("all");
   const { user } = useAuth();
   const { showToast } = useToast();
   const pathname = usePathname();
@@ -73,13 +34,27 @@ export function Navbar() {
             <span className="hidden text-xl font-bold sm:inline">airbnb clone</span>
           </Link>
 
-          {showSearch ? (
-            <Suspense fallback={<div className="hidden flex-1 md:block" />}>
-              <CategoryNav />
-            </Suspense>
-          ) : (
-            <div className="flex-1" />
-          )}
+          <nav className="hidden flex-1 items-center justify-center gap-8 md:flex">
+            {NAV_TABS.map(({ key, label, Icon }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveTab(key);
+                  if (key !== "all" && key !== "homes") {
+                    showToast(`${label} coming soon!`, "info");
+                  }
+                }}
+                className={`flex flex-col items-center gap-1.5 border-b-2 pb-3 pt-1 text-sm font-medium transition ${
+                  activeTab === key
+                    ? "border-neutral-900 text-neutral-900"
+                    : "border-transparent text-neutral-500 hover:text-neutral-900"
+                }`}
+              >
+                <Icon className="h-6 w-6" />
+                {label}
+              </button>
+            ))}
+          </nav>
 
           <div className="flex shrink-0 items-center gap-3 pb-4">
             {showSearch && (
