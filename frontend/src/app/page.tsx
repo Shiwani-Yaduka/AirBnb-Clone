@@ -6,7 +6,6 @@ import { listingsApi, ApiError } from "@/lib/api";
 import type { ListingCard as ListingCardType, Category } from "@/lib/types";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { ListingGridSkeleton } from "@/components/listing/ListingGridSkeleton";
-import { CategoryTabs } from "@/components/search/CategoryTabs";
 import { FilterPanel, EMPTY_FILTERS, type Filters } from "@/components/search/FilterPanel";
 import { Pagination } from "@/components/ui/Pagination";
 
@@ -14,7 +13,7 @@ const PAGE_SIZE = 20;
 
 function HomeContent() {
   const searchParams = useSearchParams();
-  const [category, setCategory] = useState<Category | null>(null);
+  const category = searchParams.get("category") as Category | null;
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -81,8 +80,6 @@ function HomeContent() {
 
   return (
     <div>
-      <CategoryTabs selected={category} onSelect={setCategory} />
-
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
