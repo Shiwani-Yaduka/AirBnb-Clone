@@ -8,17 +8,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from app.models.models import BookingStatus, Category, PropertyType
 
 # ---------- Auth / Users ----------
-
-
-class UserSignup(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
-
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
+# Signup/login are handled by Clerk on the frontend; UserOut is the local,
+# Clerk-synced profile returned by GET /auth/me and embedded elsewhere.
 
 
 class UserOut(BaseModel):
@@ -31,11 +22,6 @@ class UserOut(BaseModel):
     bio: str | None
     is_superhost: bool
     created_at: datetime
-
-
-class AuthResponse(BaseModel):
-    user: UserOut
-    access_token: str
 
 
 # ---------- Amenities ----------

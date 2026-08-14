@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import { AuthModal } from "@/components/layout/AuthModal";
+import { createContext, useCallback, useContext } from "react";
+import { useClerk } from "@clerk/nextjs";
 
 type AuthMode = "login" | "signup";
 
@@ -11,15 +11,20 @@ interface AuthModalContextValue {
 
 const AuthModalContext = createContext<AuthModalContextValue | null>(null);
 
+// Thin wrapper around Clerk's own modal overlay (openSignIn/openSignUp), keeping the
+// same openAuthModal(mode) contract every other component in the app already calls.
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<AuthMode | null>(null);
+  const clerk = useClerk();
 
-  return (
-    <AuthModalContext.Provider value={{ openAuthModal: setMode }}>
-      {children}
-      <AuthModal isOpen={mode !== null} onClose={() => setMode(null)} initialMode={mode ?? "login"} />
-    </AuthModalContext.Provider>
+  const openAuthModal = useCallback(
+    (mode: AuthMode) => {
+      if (mode === "login") clerk.openSignIn({});
+      else clerk.openSignUp({});
+    },
+    [clerk],
   );
+
+  return <AuthModalContext.Provider value={{ openAuthModal }}>{children}</AuthModalContext.Provider>;
 }
 
 export function useAuthModal(): AuthModalContextValue {

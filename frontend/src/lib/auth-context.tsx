@@ -1,51 +1,48 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useAuth as useClerkAuth, useClerk } from "@clerk/nextjs";
 import { authApi } from "./api";
 import type { User } from "./types";
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Bridges Clerk's session state to our own backend: once Clerk reports a signed-in
+// user, /auth/me syncs (and returns) the corresponding local User row, which carries
+// app-specific fields Clerk doesn't know about (is_superhost, bio, etc.).
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useClerkAuth();
+  const { signOut } = useClerk();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
     authApi
       .me()
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
-  }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    const { user } = await authApi.login(email, password);
-    setUser(user);
-  }, []);
-
-  const signup = useCallback(async (name: string, email: string, password: string) => {
-    const { user } = await authApi.signup(name, email, password);
-    setUser(user);
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const logout = useCallback(async () => {
-    await authApi.logout();
+    await signOut();
     setUser(null);
-  }, []);
+  }, [signOut]);
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, isLoading, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

@@ -1,3 +1,4 @@
+import { getToken as getClerkToken } from "@clerk/nextjs";
 import type {
   Amenity,
   BookedRange,
@@ -22,12 +23,26 @@ export class ApiError extends Error {
   }
 }
 
+// Clerk's getToken() waits for the SDK to finish loading and reads the session
+// token outside React, so this fetch wrapper doesn't need every call site to be
+// a component threading a token through. Falls back to unauthenticated on any
+// failure (not signed in, offline, load timeout) rather than blocking the request.
+async function getAuthToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    return await getClerkToken();
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = await getAuthToken();
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: "include",
     headers: {
       ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -48,19 +63,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 // ---------- Auth ----------
+// Signup/login/logout are handled entirely by Clerk on the frontend; this just
+// fetches the local (Clerk-synced) user profile.
 
 export const authApi = {
-  signup: (name: string, email: string, password: string) =>
-    request<{ user: User; access_token: string }>("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
-    }),
-  login: (email: string, password: string) =>
-    request<{ user: User; access_token: string }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
-  logout: () => request<void>("/auth/logout", { method: "POST" }),
   me: () => request<User | null>("/auth/me"),
 };
 
