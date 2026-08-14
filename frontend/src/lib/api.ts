@@ -145,6 +145,7 @@ export const bookingsApi = {
 // ---------- Users / host / favorites ----------
 
 export const usersApi = {
+  becomeHost: () => request<User>("/users/me/become-host", { method: "POST" }),
   myListings: () => request<ListingCard[]>("/users/me/listings"),
   myFavorites: () => request<ListingCard[]>("/users/me/favorites"),
   addFavorite: (listingId: number) => request<void>(`/favorites/${listingId}`, { method: "POST" }),

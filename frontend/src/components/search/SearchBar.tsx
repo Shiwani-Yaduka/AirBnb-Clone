@@ -312,10 +312,17 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
             </span>
             <span
               role="button"
-              tabIndex={-1}
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSearch();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSearch();
+                }
               }}
               aria-label="Search"
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand text-lg text-white transition hover:bg-brand-dark"

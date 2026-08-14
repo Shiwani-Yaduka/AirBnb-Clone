@@ -38,6 +38,8 @@ def to_card(listing: Listing, rating: float, review_count: int, is_favorited: bo
         country=listing.country,
         property_type=listing.property_type,
         category=listing.category,
+        latitude=listing.latitude,
+        longitude=listing.longitude,
         price_per_night=listing.price_per_night,
         cover_photo_url=cover,
         rating=rating,

@@ -9,11 +9,22 @@ from app.models.models import Favorite, Listing, ListingAmenity
 from app.schemas.schemas import (
     BookingWithGuestOut,
     ListingCardOut,
+    UserOut,
 )
 from app.models.models import User
 from app.services.listing_view import get_favorited_ids, get_rating_map, to_card
 
 router = APIRouter(tags=["users"])
+
+
+@router.post("/users/me/become-host", response_model=UserOut)
+def become_host(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> User:
+    """Flip the current user to a host, unlocking listing creation. Idempotent."""
+    if not current_user.is_host:
+        current_user.is_host = True
+        db.commit()
+        db.refresh(current_user)
+    return current_user
 
 
 @router.get("/users/me/listings", response_model=list[ListingCardOut])

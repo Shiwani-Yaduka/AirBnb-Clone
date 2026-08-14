@@ -8,6 +8,7 @@ import { UserMenu } from "./UserMenu";
 import { Modal } from "../ui/Modal";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
+import { useBecomeHostModal } from "@/lib/become-host-modal-context";
 import { GlobeIcon, SearchTabIcon } from "./NavIcons";
 
 const NAV_TABS = [
@@ -100,6 +101,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { requestBecomeHost } = useBecomeHostModal();
   const pathname = usePathname();
   const showSearch = pathname === "/";
 
@@ -156,12 +158,12 @@ export function Navbar() {
           )}
 
           <div className="flex shrink-0 items-center gap-3 pb-4">
-            <Link
-              href="/host"
+            <button
+              onClick={requestBecomeHost}
               className="hidden rounded-full px-4 py-2.5 text-sm font-medium hover:bg-neutral-100 sm:block"
             >
-              {user ? "Host dashboard" : "Become a host"}
-            </Link>
+              {user?.is_host ? "Host dashboard" : "Become a host"}
+            </button>
             <button
               onClick={() => showToast("Language & currency settings coming soon!", "info")}
               aria-label="Language and region"

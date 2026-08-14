@@ -28,6 +28,7 @@ export interface User {
   email: string;
   avatar_url: string | null;
   bio: string | null;
+  is_host: boolean;
   is_superhost: boolean;
   created_at: string;
 }
@@ -52,6 +53,8 @@ export interface ListingCard {
   country: string;
   property_type: PropertyType;
   category: Category;
+  latitude: number;
+  longitude: number;
   price_per_night: number;
   cover_photo_url: string | null;
   rating: number;

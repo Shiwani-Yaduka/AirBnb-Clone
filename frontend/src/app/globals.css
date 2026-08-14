@@ -30,6 +30,33 @@ body {
   border-radius: 0.75rem;
 }
 
+/* Airbnb-style map price tags: reset Leaflet's default divIcon box, then draw our own pill. */
+.price-pin {
+  background: transparent;
+  border: none;
+}
+.price-pin-pill {
+  display: inline-block;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #222222;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.price-pin-pill:hover,
+.price-pin-pill--active {
+  background: #222222;
+  color: #ffffff;
+  transform: translate(-50%, -100%) scale(1.08);
+  z-index: 1000;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

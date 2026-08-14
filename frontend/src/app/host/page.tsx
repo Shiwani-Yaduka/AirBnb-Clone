@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { listingsApi, usersApi, ApiError } from "@/lib/api";
 import type { ListingCard } from "@/lib/types";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireHost } from "@/components/auth/RequireHost";
 import { HostListingRow } from "@/components/host/HostListingRow";
 import { BookingsModal } from "@/components/host/BookingsModal";
 import { useToast } from "@/lib/toast-context";
@@ -81,8 +81,8 @@ function HostDashboardContent() {
 
 export default function HostDashboardPage() {
   return (
-    <RequireAuth>
+    <RequireHost>
       <HostDashboardContent />
-    </RequireAuth>
+    </RequireHost>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { listingsApi, ApiError } from "@/lib/api";
 import type { ListingFormInput } from "@/lib/types";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireHost } from "@/components/auth/RequireHost";
 import { ListingForm } from "@/components/host/ListingForm";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
@@ -88,8 +88,8 @@ function EditListingContent() {
 
 export default function EditListingPage() {
   return (
-    <RequireAuth>
+    <RequireHost>
       <EditListingContent />
-    </RequireAuth>
+    </RequireHost>
   );
 }

@@ -20,6 +20,7 @@ class UserOut(BaseModel):
     email: EmailStr
     avatar_url: str | None
     bio: str | None
+    is_host: bool
     is_superhost: bool
     created_at: datetime
 
@@ -108,6 +109,8 @@ class ListingCardOut(BaseModel):
     country: str
     property_type: PropertyType
     category: Category
+    latitude: float
+    longitude: float
     price_per_night: float
     cover_photo_url: str | None
     rating: float

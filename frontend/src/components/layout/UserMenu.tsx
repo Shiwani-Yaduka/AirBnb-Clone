@@ -7,11 +7,13 @@ import { Avatar } from "../ui/Avatar";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/lib/toast-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
+import { useBecomeHostModal } from "@/lib/become-host-modal-context";
 
 export function UserMenu() {
   const { user, logout } = useAuth();
   const { showToast } = useToast();
   const { openAuthModal } = useAuthModal();
+  const { requestBecomeHost } = useBecomeHostModal();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -44,7 +46,7 @@ export function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-56 rounded-xl border border-line bg-white py-2 shadow-2xl">
+        <div className="absolute right-0 top-12 z-50 w-56 rounded-xl border border-line bg-white py-2 shadow-2xl">
           {user ? (
             <>
               <Link href="/trips" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-neutral-50">
@@ -53,9 +55,15 @@ export function UserMenu() {
               <Link href="/wishlist" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-neutral-50">
                 Wishlist
               </Link>
-              <Link href="/host" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-neutral-50">
-                Host dashboard
-              </Link>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  requestBecomeHost();
+                }}
+                className="block w-full px-4 py-2.5 text-left text-sm hover:bg-neutral-50"
+              >
+                {user.is_host ? "Host dashboard" : "Become a host"}
+              </button>
               <div className="my-1 border-t border-line" />
               <button onClick={handleLogout} className="block w-full px-4 py-2.5 text-left text-sm hover:bg-neutral-50">
                 Log out
@@ -82,9 +90,15 @@ export function UserMenu() {
                 Log in
               </button>
               <div className="my-1 border-t border-line" />
-              <Link href="/host" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-neutral-50">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  requestBecomeHost();
+                }}
+                className="block w-full px-4 py-2.5 text-left text-sm hover:bg-neutral-50"
+              >
                 Become a host
-              </Link>
+              </button>
             </>
           )}
         </div>

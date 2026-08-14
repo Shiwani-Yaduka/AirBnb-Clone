@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { listingsApi, ApiError } from "@/lib/api";
 import type { ListingFormInput } from "@/lib/types";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireHost } from "@/components/auth/RequireHost";
 import { ListingForm } from "@/components/host/ListingForm";
 import { useToast } from "@/lib/toast-context";
 
@@ -31,8 +31,8 @@ function NewListingContent() {
 
 export default function NewListingPage() {
   return (
-    <RequireAuth>
+    <RequireHost>
       <NewListingContent />
-    </RequireAuth>
+    </RequireHost>
   );
 }

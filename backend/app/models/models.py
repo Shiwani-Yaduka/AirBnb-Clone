@@ -75,6 +75,9 @@ class User(Base):
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # False for every new signup; only becomes True once the user explicitly clicks
+    # "Become a host" (POST /users/me/become-host). Only hosts may create listings.
+    is_host: Mapped[bool] = mapped_column(default=False)
     is_superhost: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

@@ -214,6 +214,7 @@ def seed(force: bool = False) -> None:
                 hashed_password=hash_password("password123"),
                 avatar_url=_unsplash(AVATAR_PHOTO_IDS[i % len(AVATAR_PHOTO_IDS)], w=200),
                 bio=f"Hi, I'm {name.split()[0]}! Happy to help make your stay memorable.",
+                is_host=i < len(HOSTS),
                 is_superhost=i < 3,
             )
             users.append(user)

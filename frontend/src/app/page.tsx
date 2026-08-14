@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { listingsApi, ApiError } from "@/lib/api";
 import type { ListingCard as ListingCardType, Category, CitySection } from "@/lib/types";
@@ -10,6 +11,8 @@ import { ListingCarouselRow } from "@/components/listing/ListingCarouselRow";
 import { CarouselRowSkeleton } from "@/components/listing/CarouselRowSkeleton";
 import { FilterPanel, EMPTY_FILTERS, type Filters } from "@/components/search/FilterPanel";
 import { Pagination } from "@/components/ui/Pagination";
+
+const SearchResultsMap = dynamic(() => import("@/components/search/SearchResultsMap"), { ssr: false });
 
 const PAGE_SIZE = 20;
 
@@ -29,6 +32,8 @@ function HomeContent() {
   const [sections, setSections] = useState<CitySection[]>([]);
   const [isLoadingSections, setIsLoadingSections] = useState(true);
   const [sectionsError, setSectionsError] = useState<string | null>(null);
+
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   const location = searchParams.get("location") ?? undefined;
   const checkIn = searchParams.get("check_in") ?? undefined;
@@ -90,6 +95,10 @@ function HomeContent() {
       cancelled = true;
     };
   }, [isBrowsing, location, checkIn, checkOut, guests, category, filters, page, type]);
+
+  useEffect(() => {
+    setHoveredId(null);
+  }, [items]);
 
   useEffect(() => {
     if (!isBrowsing) return;
@@ -167,14 +176,21 @@ function HomeContent() {
             <p className="text-sm text-neutral-500">Try adjusting your filters or dates.</p>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {items.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+          <div className="flex gap-8">
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                {items.map((listing) => (
+                  <div key={listing.id} onMouseEnter={() => setHoveredId(listing.id)} onMouseLeave={() => setHoveredId(null)}>
+                    <ListingCard listing={listing} />
+                  </div>
+                ))}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
             </div>
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </>
+            <div className="sticky top-24 hidden h-[calc(100vh-7rem)] w-[42%] max-w-xl shrink-0 overflow-hidden rounded-2xl border border-line lg:block">
+              <SearchResultsMap listings={items} activeId={hoveredId} onMarkerHover={setHoveredId} />
+            </div>
+          </div>
         )}
       </div>
 

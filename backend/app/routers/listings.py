@@ -181,7 +181,9 @@ def _apply_amenities(db: Session, listing: Listing, amenity_ids: list[int]) -> N
 def create_listing(
     payload: ListingCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> ListingDetailOut:
-    """Create a new listing owned by the current user."""
+    """Create a new listing owned by the current user. Hosts only — see POST /users/me/become-host."""
+    if not current_user.is_host:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Become a host to create a listing")
     data = payload.model_dump(exclude={"photo_urls", "amenity_ids"})
     listing = Listing(host_id=current_user.id, **data)
     listing.photos = [ListingPhoto(url=url, sort_order=i) for i, url in enumerate(payload.photo_urls)]

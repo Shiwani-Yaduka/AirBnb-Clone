@@ -41,8 +41,6 @@ export function CheckoutModal({
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
 
-  const canSubmit = cardNumber.trim().length >= 12 && expiry.trim().length >= 4 && cvv.trim().length >= 3;
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Confirm and pay" maxWidth="max-w-md">
       <div className="flex flex-col gap-6">
@@ -104,7 +102,7 @@ export function CheckoutModal({
 
         <button
           onClick={onConfirm}
-          disabled={!canSubmit || isSubmitting}
+          disabled={isSubmitting}
           className="w-full rounded-xl bg-brand py-3.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
         >
           {isSubmitting ? "Confirming…" : `Confirm and pay $${total.toFixed(2)}`}
