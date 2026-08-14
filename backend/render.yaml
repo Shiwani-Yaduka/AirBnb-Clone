@@ -15,9 +15,13 @@ services:
         value: sqlite:////app/airbnb_clone.db
       - key: ENVIRONMENT
         value: production
-      - key: JWT_SECRET
-        generateValue: true
       - key: CORS_ORIGINS
         value: '["https://airbnbscalershiwani.vercel.app"]'
       - key: PUBLIC_URL
         value: https://airbnb-clone-backend-dkav.onrender.com
+      # Server-side Clerk key (dashboard.clerk.com -> API Keys), same instance as the
+      # frontend's publishable key. Not stored here - set it manually in the Render
+      # dashboard after the service exists. Without it every authenticated request
+      # (login sync, bookings, become-host, ...) silently no-ops instead of erroring.
+      - key: CLERK_SECRET_KEY
+        sync: false
