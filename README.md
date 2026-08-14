@@ -148,7 +148,7 @@ map is) — that bonus item was left out for time, as was dark mode.
 
 ## Deployment
 
-- **Frontend → Vercel**: live at https://airbnbscaler.vercel.app. Root Directory
+- **Frontend → Vercel**: live at https://airbnbscalershiwani.vercel.app. Root Directory
   is `frontend`, `NEXT_PUBLIC_API_URL` points at the Render backend.
 - **Backend → Render**: `backend/render.yaml` + `backend/Dockerfile` define a
   Docker web service. Render's free plan doesn't support persistent disks, so
