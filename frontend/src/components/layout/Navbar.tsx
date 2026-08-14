@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "../search/SearchBar";
 import { UserMenu } from "./UserMenu";
@@ -25,20 +25,77 @@ const TAB_TYPE_PARAM: Record<(typeof NAV_TABS)[number]["key"], string | null> = 
   services: "service",
 };
 
+// Reads the "type" search param, so it's isolated in its own Suspense boundary - Navbar is
+// rendered on every page (including statically-prerendered ones) via the root layout, and
+// useSearchParams() there requires Suspense or the build fails on those static pages.
+function NavTabButtons({ variant }: { variant: "desktop" | "mobile" }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type");
+  const activeTab: (typeof NAV_TABS)[number]["key"] =
+    typeParam === "experience" ? "experiences" : typeParam === "service" ? "services" : "all";
+
+  function handleTabClick(key: (typeof NAV_TABS)[number]["key"]) {
+    const type = TAB_TYPE_PARAM[key];
+    router.push(type ? `/?type=${type}` : "/");
+  }
+
+  if (variant === "mobile") {
+    return (
+      <>
+        {NAV_TABS.map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => handleTabClick(key)}
+            className={`flex shrink-0 flex-col items-center gap-1 text-xs font-medium ${
+              activeTab === key ? "text-neutral-900" : "text-neutral-500"
+            }`}
+          >
+            {icon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={icon} alt="" className="h-6 w-6 object-contain" />
+            ) : (
+              <GlobeIcon className="h-5 w-5" />
+            )}
+            {label}
+          </button>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {NAV_TABS.map(({ key, label, icon }) => (
+        <button
+          key={key}
+          onClick={() => handleTabClick(key)}
+          className={`flex flex-col items-center gap-1.5 border-b-2 pb-3 pt-1 text-sm font-medium transition ${
+            activeTab === key
+              ? "border-neutral-900 text-neutral-900"
+              : "border-transparent text-neutral-500 hover:text-neutral-900"
+          }`}
+        >
+          {icon ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={icon} alt="" className="h-7 w-7 object-contain" />
+          ) : (
+            <GlobeIcon className="h-6 w-6" />
+          )}
+          {label}
+        </button>
+      ))}
+    </>
+  );
+}
+
 export function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
   const { showToast } = useToast();
   const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const showSearch = pathname === "/";
-
-  // Derives the visually-active nav tab from the current "type" search param instead of local click state.
-  const typeParam = searchParams.get("type");
-  const activeTab: (typeof NAV_TABS)[number]["key"] =
-    typeParam === "experience" ? "experiences" : typeParam === "service" ? "services" : "all";
 
   useEffect(() => {
     if (!showSearch) {
@@ -55,12 +112,6 @@ export function Navbar() {
 
   const shrink = showSearch && scrolled;
 
-  // Navigates to "/" (optionally with a "?type=" param) when a nav tab is clicked.
-  function handleTabClick(key: (typeof NAV_TABS)[number]["key"]) {
-    const type = TAB_TYPE_PARAM[key];
-    router.push(type ? `/?type=${type}` : "/");
-  }
-
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-line bg-white">
@@ -75,25 +126,9 @@ export function Navbar() {
               shrink ? "max-h-0 -translate-y-2 opacity-0" : "max-h-20 translate-y-0 opacity-100"
             }`}
           >
-            {NAV_TABS.map(({ key, label, icon }) => (
-              <button
-                key={key}
-                onClick={() => handleTabClick(key)}
-                className={`flex flex-col items-center gap-1.5 border-b-2 pb-3 pt-1 text-sm font-medium transition ${
-                  activeTab === key
-                    ? "border-neutral-900 text-neutral-900"
-                    : "border-transparent text-neutral-500 hover:text-neutral-900"
-                }`}
-              >
-                {icon ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={icon} alt="" className="h-7 w-7 object-contain" />
-                ) : (
-                  <GlobeIcon className="h-6 w-6" />
-                )}
-                {label}
-              </button>
-            ))}
+            <Suspense fallback={null}>
+              <NavTabButtons variant="desktop" />
+            </Suspense>
           </nav>
 
           {shrink && (
@@ -158,23 +193,9 @@ export function Navbar() {
         )}
 
         <nav className="scrollbar-none flex gap-6 overflow-x-auto border-t border-line px-4 py-3 md:hidden">
-          {NAV_TABS.map(({ key, label, icon }) => (
-            <button
-              key={key}
-              onClick={() => handleTabClick(key)}
-              className={`flex shrink-0 flex-col items-center gap-1 text-xs font-medium ${
-                activeTab === key ? "text-neutral-900" : "text-neutral-500"
-              }`}
-            >
-              {icon ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={icon} alt="" className="h-6 w-6 object-contain" />
-              ) : (
-                <GlobeIcon className="h-5 w-5" />
-              )}
-              {label}
-            </button>
-          ))}
+          <Suspense fallback={null}>
+            <NavTabButtons variant="mobile" />
+          </Suspense>
         </nav>
       </header>
 
