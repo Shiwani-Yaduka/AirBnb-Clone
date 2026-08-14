@@ -20,7 +20,7 @@ const NAV_TABS = [
 // Maps a nav tab key to the "type" search param it navigates to (null = no param, i.e. plain "/").
 const TAB_TYPE_PARAM: Record<(typeof NAV_TABS)[number]["key"], string | null> = {
   all: null,
-  homes: null,
+  homes: "home",
   experiences: "experience",
   services: "service",
 };
@@ -33,7 +33,13 @@ function NavTabButtons({ variant }: { variant: "desktop" | "mobile" }) {
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type");
   const activeTab: (typeof NAV_TABS)[number]["key"] =
-    typeParam === "experience" ? "experiences" : typeParam === "service" ? "services" : "all";
+    typeParam === "experience"
+      ? "experiences"
+      : typeParam === "service"
+        ? "services"
+        : typeParam === "home"
+          ? "homes"
+          : "all";
 
   function handleTabClick(key: (typeof NAV_TABS)[number]["key"]) {
     const type = TAB_TYPE_PARAM[key];

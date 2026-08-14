@@ -16,7 +16,7 @@ const PAGE_SIZE = 20;
 function HomeContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") as Category | null;
-  const type = searchParams.get("type") as "experience" | "service" | null;
+  const type = searchParams.get("type") as "home" | "experience" | "service" | null;
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
