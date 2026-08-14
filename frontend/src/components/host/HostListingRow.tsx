@@ -26,28 +26,36 @@ export function HostListingRow({ listing, onViewBookings, onDelete }: HostListin
   }
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-line p-4">
-      {listing.cover_photo_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={listing.cover_photo_url} alt={listing.title} className="h-20 w-20 rounded-xl object-cover" />
-      ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-neutral-100 text-2xl">🏠</div>
-      )}
+    <div className="flex flex-col gap-4 rounded-2xl border border-line p-4 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
+        {listing.cover_photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={listing.cover_photo_url}
+            alt={listing.title}
+            className="h-20 w-20 shrink-0 rounded-xl object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-2xl">
+            🏠
+          </div>
+        )}
 
-      <div className="flex-1">
-        <Link href={`/listings/${listing.id}`} className="font-semibold hover:underline">
-          {listing.title}
-        </Link>
-        <p className="text-sm text-neutral-500">
-          {listing.city}, {listing.country}
-        </p>
-        <div className="mt-1 flex items-center gap-3 text-sm">
-          <StarRating rating={listing.rating} reviewCount={listing.review_count} />
-          <span className="font-medium">${listing.price_per_night.toLocaleString()}/night</span>
+        <div className="min-w-0 flex-1">
+          <Link href={`/listings/${listing.id}`} className="block truncate font-semibold hover:underline">
+            {listing.title}
+          </Link>
+          <p className="truncate text-sm text-neutral-500">
+            {listing.city}, {listing.country}
+          </p>
+          <div className="mt-1 flex items-center gap-3 text-sm">
+            <StarRating rating={listing.rating} reviewCount={listing.review_count} />
+            <span className="font-medium">${listing.price_per_night.toLocaleString()}/night</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={onViewBookings}
           className="rounded-lg border border-line px-3 py-2 text-sm font-medium hover:bg-neutral-50"

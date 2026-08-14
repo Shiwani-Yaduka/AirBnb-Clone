@@ -44,7 +44,7 @@ export function PhotoUrlPicker({ value, onChange }: PhotoUrlPickerProps) {
       )}
 
       <p className="mb-2 text-sm font-medium">Pick photos</p>
-      <div className="grid grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {CURATED_PHOTOS.map((url) => {
           const isSelected = value.includes(url);
           return (

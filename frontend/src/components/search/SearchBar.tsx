@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DayPicker, type DateRange } from "react-day-picker";
 import "react-day-picker/style.css";
-import { format } from "date-fns";
+import { addDays, format, subDays } from "date-fns";
 
 interface SearchBarProps {
   onSearch?: () => void;
@@ -12,14 +12,42 @@ interface SearchBarProps {
 }
 
 type Field = "where" | "when" | "who" | null;
+type DateMode = "dates" | "flexible";
+
+const FLEX_OPTIONS = [
+  { label: "Exact dates", days: 0 },
+  { label: "± 1 day", days: 1 },
+  { label: "± 2 days", days: 2 },
+  { label: "± 3 days", days: 3 },
+  { label: "± 7 days", days: 7 },
+  { label: "± 14 days", days: 14 },
+];
+
+// Renders 2 months on wide screens, 1 on narrow ones, so the calendar dropdown
+// never overflows a small viewport (react-day-picker has no built-in responsive prop).
+function useResponsiveMonthCount(breakpoint = 700) {
+  const [count, setCount] = useState(2);
+  useEffect(() => {
+    function update() {
+      setCount(window.innerWidth < breakpoint ? 1 : 2);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [breakpoint]);
+  return count;
+}
 
 export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
   const router = useRouter();
   const [location, setLocation] = useState("");
   const [range, setRange] = useState<DateRange | undefined>();
+  const [dateMode, setDateMode] = useState<DateMode>("dates");
+  const [flexDays, setFlexDays] = useState(0);
   const [guests, setGuests] = useState(1);
   const [activeField, setActiveField] = useState<Field>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const monthCount = useResponsiveMonthCount();
 
   useEffect(() => {
     if (compact) return;
@@ -35,8 +63,9 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
   function handleSearch() {
     const params = new URLSearchParams();
     if (location) params.set("location", location);
-    if (range?.from) params.set("check_in", format(range.from, "yyyy-MM-dd"));
-    if (range?.to) params.set("check_out", format(range.to, "yyyy-MM-dd"));
+    const padding = dateMode === "flexible" ? flexDays : 0;
+    if (range?.from) params.set("check_in", format(subDays(range.from, padding), "yyyy-MM-dd"));
+    if (range?.to) params.set("check_out", format(addDays(range.to, padding), "yyyy-MM-dd"));
     if (guests > 1) params.set("guests", String(guests));
     setActiveField(null);
     router.push(`/?${params.toString()}`);
@@ -50,6 +79,47 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
         ? format(range.from, "MMM d")
         : null;
   const guestsLabel = guests > 1 ? `${guests} guests` : null;
+
+  const dateModeTabs = (
+    <div className="mb-4 flex justify-center">
+      <div className="inline-flex rounded-full border border-line bg-neutral-100 p-1">
+        {(["dates", "flexible"] as DateMode[]).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => {
+              setDateMode(mode);
+              if (mode === "dates") setFlexDays(0);
+            }}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition ${
+              dateMode === mode ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const flexPills = dateMode === "flexible" && (
+    <div className="scrollbar-none mt-3 flex justify-center gap-2 overflow-x-auto px-1">
+      {FLEX_OPTIONS.map((opt) => (
+        <button
+          key={opt.label}
+          type="button"
+          onClick={() => setFlexDays(opt.days)}
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+            flexDays === opt.days
+              ? "border-neutral-900 bg-neutral-900 text-white"
+              : "border-line text-neutral-700 hover:border-neutral-900"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
 
   if (compact) {
     return (
@@ -65,14 +135,18 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold">When</label>
-          <DayPicker
-            mode="range"
-            numberOfMonths={1}
-            selected={range}
-            onSelect={setRange}
-            disabled={{ before: new Date() }}
-            classNames={{ selected: "bg-brand text-white", today: "font-bold text-brand" }}
-          />
+          {dateModeTabs}
+          <div className="scrollbar-none overflow-x-auto">
+            <DayPicker
+              mode="range"
+              numberOfMonths={1}
+              selected={range}
+              onSelect={setRange}
+              disabled={{ before: new Date() }}
+              classNames={{ selected: "bg-brand text-white", today: "font-bold text-brand" }}
+            />
+          </div>
+          {flexPills}
         </div>
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold">Who</label>
@@ -174,17 +248,26 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
       </div>
 
       {activeField === "when" && (
-        <div className="absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 rounded-2xl border border-line bg-white p-3 shadow-2xl">
+        <div className="absolute left-1/2 top-full z-30 mt-3 max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-x-auto rounded-2xl border border-line bg-white p-4 shadow-2xl">
+          {dateModeTabs}
           <DayPicker
             mode="range"
-            numberOfMonths={2}
+            numberOfMonths={monthCount}
             selected={range}
             onSelect={setRange}
             disabled={{ before: new Date() }}
             classNames={{ selected: "bg-brand text-white", today: "font-bold text-brand" }}
           />
-          <div className="flex justify-end gap-3 px-2 pb-1">
-            <button type="button" className="text-sm font-semibold underline" onClick={() => setRange(undefined)}>
+          {flexPills}
+          <div className="flex justify-end gap-3 px-2 pb-1 pt-2">
+            <button
+              type="button"
+              className="text-sm font-semibold underline"
+              onClick={() => {
+                setRange(undefined);
+                setFlexDays(0);
+              }}
+            >
               Clear
             </button>
             <button type="button" className="text-sm font-semibold underline" onClick={() => setActiveField(null)}>
