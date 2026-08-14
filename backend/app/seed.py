@@ -47,6 +47,38 @@ PROPERTY_PHOTO_IDS = [
     "1600566753086-00f18fb6b3ea",
 ]
 
+EXPERIENCE_PHOTO_IDS = [
+    "1653233797467-1a528819fd4f", "1507048331197-7d4ac70811cf", "1551218808-94e220e084d2",
+    "1514986888952-8cd320577b68", "1506368249639-73a05d6f6488", "1466637574441-749b8f19452f",
+    "1683624328172-88fb24625ec1", "1556911261-6bd341186b2f", "1577219492769-b63a779fac28",
+    "1549590143-d5855148a9d5", "1605433247501-698725862cea", "1556910103-1c02745aae4d",
+    "1452251889946-8ff5ea7b27ab", "1591189863430-ab87e120f312", "1610649333217-31ea4ea0df1e",
+    "1551632811-561732d1e306", "1501554728187-ce583db33af7", "1501555088652-021faa106b9b",
+    "1629185752152-fe65698ddee4", "1568454537842-d933259bb258", "1586022045497-31fcf76fa6cc",
+    "1465188162913-8fb5709d6d57", "1539635278303-d4002c07eae3", "1600807497639-3b5d8e74a232",
+    "1562593028-1fe2d15bde36", "1627551885247-f9301e1d6101", "1629401681628-a37c83eb57d9",
+    "1595351298020-038700609878", "1590605095243-072811dbe64c", "1620140036708-455ed5c0426a",
+    "1609881583302-61548332039c", "1589051088132-06f36a22012a", "1607556671927-78a6605e290b",
+    "1622691078858-58f9eb8825e0", "1590422886897-7dd50e58577e", "1493106641515-6b5631de4bb9",
+]
+
+SERVICE_PHOTO_IDS = [
+    "1590486803833-1c5dc8ddd4c8", "1603574670812-d24560880210", "1549981832-2ba2ee913334",
+    "1512813498716-3e640fed3f39", "1603541963840-c88b82588e57", "1621024994278-e409544f4085",
+    "1628657485319-5865d0f2791d", "1596109368446-8135e5dd7386", "1621024994326-91782bb4a5ba",
+    "1495580621852-5de0cc907d2f", "1567531708788-4c44105d00ff", "1544367567-0f2fcb009e0b",
+    "1506126613408-eca07ce68773", "1599901860904-17e6ed7083a0", "1552196563-55cd4e45efb3",
+    "1588286840104-8957b019727f", "1579454566790-f9e5697ddf36", "1552196527-bffef41ef674",
+    "1575052814086-f385e2e2ad1b", "1545205597-3d9d02c29597", "1608405059861-b21a68ae76a2",
+    "1549576490-b0b4831ef60a", "1593164842264-854604db2260", "1600334089648-b0d9d3028eb2",
+    "1515377905703-c4788e51af15", "1519823551278-64ac92734fb1", "1620733723572-11c53f73a416",
+    "1544161515-4ab6ce6db874", "1572715376701-98568319fd0b", "1577219491135-ce391730fb2c",
+    "1600565193348-f74bd3c7ccdf", "1581349485608-9469926a8e5e", "1595257841889-eca2678454e2",
+    "1541614101331-1a5a3a194e92", "1577106263724-2c8e03bfe9cf", "1556940211-ea1d97e04458",
+    "1740657254989-42fe9c3b8cce", "1647381518264-97ff1835026f", "1713110824336-f78c320dcf8e",
+    "1581578949510-fa7315c4c350", "1664008760004-182420e58e7c",
+]
+
 AVATAR_PHOTO_IDS = [
     "1472099645785-5658abf4ff4e", "1438761681033-6461ffad8d80", "1494790108377-be9c29b29330",
     "1500648767791-00dcc994a43e", "1544005313-94ddf0286df2", "1519085360753-af0119f7cbe7",
@@ -233,9 +265,9 @@ def seed(force: bool = False) -> None:
         # Experiences and services reuse the exact same Listing model/booking flow as
         # homes (just a different listing_type and per-guest, not per-night, framing),
         # so they get carousel rows, detail pages, maps, and bookings for free.
-        for kind, templates, description, price_range in (
-            (ListingType.EXPERIENCE, EXPERIENCE_TITLE_TEMPLATES, EXPERIENCE_DESCRIPTION, (25, 220)),
-            (ListingType.SERVICE, SERVICE_TITLE_TEMPLATES, SERVICE_DESCRIPTION, (40, 300)),
+        for kind, templates, description, price_range, photo_pool in (
+            (ListingType.EXPERIENCE, EXPERIENCE_TITLE_TEMPLATES, EXPERIENCE_DESCRIPTION, (25, 220), EXPERIENCE_PHOTO_IDS),
+            (ListingType.SERVICE, SERVICE_TITLE_TEMPLATES, SERVICE_DESCRIPTION, (40, 300), SERVICE_PHOTO_IDS),
         ):
             for i in range(LISTINGS_PER_CITY * len(CITIES)):
                 host = hosts[i % len(hosts)]
@@ -265,7 +297,7 @@ def seed(force: bool = False) -> None:
                     beds=0,
                     bathrooms=0,
                 )
-                photo_ids = random.sample(PROPERTY_PHOTO_IDS, k=6)
+                photo_ids = random.sample(photo_pool, k=6)
                 listing.photos = [ListingPhoto(url=_unsplash(pid), sort_order=j) for j, pid in enumerate(photo_ids)]
 
                 listings.append(listing)
