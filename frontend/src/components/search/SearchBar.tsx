@@ -14,6 +14,27 @@ interface SearchBarProps {
 type Field = "where" | "when" | "who" | null;
 type DateMode = "dates" | "flexible";
 
+interface GuestCounts {
+  adults: number;
+  children: number;
+  infants: number;
+  pets: number;
+}
+
+const EMPTY_GUESTS: GuestCounts = { adults: 1, children: 0, infants: 0, pets: 0 };
+
+const GUEST_CATEGORIES: {
+  key: keyof GuestCounts;
+  label: string;
+  description: string;
+  min: number;
+}[] = [
+  { key: "adults", label: "Adults", description: "Ages 13 or above", min: 1 },
+  { key: "children", label: "Children", description: "Ages 2–12", min: 0 },
+  { key: "infants", label: "Infants", description: "Under 2", min: 0 },
+  { key: "pets", label: "Pets", description: "Bringing a service animal?", min: 0 },
+];
+
 const FLEX_OPTIONS = [
   { label: "Exact dates", days: 0 },
   { label: "± 1 day", days: 1 },
@@ -38,13 +59,68 @@ function useResponsiveMonthCount(breakpoint = 700) {
   return count;
 }
 
+// One Adults/Children/Infants/Pets row with a description and a +/- stepper.
+function GuestCounterRow({
+  label,
+  description,
+  value,
+  min,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  value: number;
+  min: number;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3">
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-neutral-500">{description}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label={`Decrease ${label.toLowerCase()}`}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-400 disabled:opacity-30"
+        >
+          −
+        </button>
+        <span className="w-6 text-center text-sm">{String(value).padStart(2, "0")}</span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(16, value + 1))}
+          aria-label={`Increase ${label.toLowerCase()}`}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-400"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Builds the compact "Who" summary text, e.g. "2 guests · 1 infant · 1 pet".
+function formatGuestsLabel(guests: GuestCounts): string | null {
+  const total = guests.adults + guests.children;
+  if (total <= 1 && guests.infants === 0 && guests.pets === 0) return null;
+  const parts: string[] = [];
+  if (total > 0) parts.push(`${total} guest${total > 1 ? "s" : ""}`);
+  if (guests.infants > 0) parts.push(`${guests.infants} infant${guests.infants > 1 ? "s" : ""}`);
+  if (guests.pets > 0) parts.push(`${guests.pets} pet${guests.pets > 1 ? "s" : ""}`);
+  return parts.join(" · ");
+}
+
 export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
   const router = useRouter();
   const [location, setLocation] = useState("");
   const [range, setRange] = useState<DateRange | undefined>();
   const [dateMode, setDateMode] = useState<DateMode>("dates");
   const [flexDays, setFlexDays] = useState(0);
-  const [guests, setGuests] = useState(1);
+  const [guests, setGuests] = useState<GuestCounts>(EMPTY_GUESTS);
   const [activeField, setActiveField] = useState<Field>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const monthCount = useResponsiveMonthCount();
@@ -60,13 +136,18 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [compact]);
 
+  function updateGuests<K extends keyof GuestCounts>(key: K, value: number) {
+    setGuests((g) => ({ ...g, [key]: value }));
+  }
+
   function handleSearch() {
     const params = new URLSearchParams();
     if (location) params.set("location", location);
     const padding = dateMode === "flexible" ? flexDays : 0;
     if (range?.from) params.set("check_in", format(subDays(range.from, padding), "yyyy-MM-dd"));
     if (range?.to) params.set("check_out", format(addDays(range.to, padding), "yyyy-MM-dd"));
-    if (guests > 1) params.set("guests", String(guests));
+    const totalGuests = guests.adults + guests.children;
+    if (totalGuests > 1) params.set("guests", String(totalGuests));
     setActiveField(null);
     router.push(`/?${params.toString()}`);
     onSearch?.();
@@ -78,7 +159,7 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
       : range?.from
         ? format(range.from, "MMM d")
         : null;
-  const guestsLabel = guests > 1 ? `${guests} guests` : null;
+  const guestsLabel = formatGuestsLabel(guests);
 
   const dateModeTabs = (
     <div className="mb-4 flex justify-center">
@@ -121,6 +202,21 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
     </div>
   );
 
+  const guestCounters = (
+    <div className="divide-y divide-line">
+      {GUEST_CATEGORIES.map((category) => (
+        <GuestCounterRow
+          key={category.key}
+          label={category.label}
+          description={category.description}
+          value={guests[category.key]}
+          min={category.min}
+          onChange={(next) => updateGuests(category.key, next)}
+        />
+      ))}
+    </div>
+  );
+
   if (compact) {
     return (
       <div className="flex w-full flex-col gap-4">
@@ -148,26 +244,9 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
           </div>
           {flexPills}
         </div>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold">Who</label>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.max(1, g - 1))}
-              className="h-8 w-8 rounded-full border border-neutral-400 disabled:opacity-30"
-              disabled={guests <= 1}
-            >
-              −
-            </button>
-            <span className="w-4 text-center text-sm">{guests}</span>
-            <button
-              type="button"
-              onClick={() => setGuests((g) => Math.min(16, g + 1))}
-              className="h-8 w-8 rounded-full border border-neutral-400"
-            >
-              +
-            </button>
-          </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold">Who</label>
+          {guestCounters}
         </div>
         <button
           onClick={handleSearch}
@@ -278,29 +357,15 @@ export function SearchBar({ onSearch, compact = false }: SearchBarProps) {
       )}
 
       {activeField === "who" && (
-        <div className="absolute right-0 top-full z-30 mt-3 w-64 rounded-2xl border border-line bg-white p-4 shadow-2xl">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Guests</span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setGuests((g) => Math.max(1, g - 1))}
-                className="h-8 w-8 rounded-full border border-neutral-400 disabled:opacity-30"
-                disabled={guests <= 1}
-                aria-label="Decrease guests"
-              >
-                −
-              </button>
-              <span className="w-4 text-center text-sm">{guests}</span>
-              <button
-                type="button"
-                onClick={() => setGuests((g) => Math.min(16, g + 1))}
-                className="h-8 w-8 rounded-full border border-neutral-400"
-                aria-label="Increase guests"
-              >
-                +
-              </button>
-            </div>
+        <div className="absolute right-0 top-full z-30 mt-3 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-white p-4 shadow-2xl">
+          {guestCounters}
+          <div className="flex justify-end gap-3 px-1 pb-1 pt-3">
+            <button type="button" className="text-sm font-semibold underline" onClick={() => setGuests(EMPTY_GUESTS)}>
+              Clear
+            </button>
+            <button type="button" className="text-sm font-semibold underline" onClick={() => setActiveField(null)}>
+              Done
+            </button>
           </div>
         </div>
       )}
