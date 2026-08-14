@@ -5,6 +5,8 @@ Run with: venv/Scripts/python.exe -m app.seed
 import random
 from datetime import date, timedelta
 
+from faker import Faker
+
 from app.core.database import Base, SessionLocal, engine
 from app.core.security import hash_password
 from app.models.models import (
@@ -15,12 +17,15 @@ from app.models.models import (
     Listing,
     ListingAmenity,
     ListingPhoto,
+    ListingType,
     PropertyType,
     Review,
     User,
 )
 
 random.seed(42)
+Faker.seed(42)
+fake = Faker()
 
 
 def _unsplash(photo_id: str, w: int = 1200) -> str:
@@ -58,6 +63,9 @@ AMENITIES = [
     ("Waterfront", "waterfront"),
 ]
 
+# A handful of named, documented hosts/guests (their login is called out in the
+# README as demo credentials) plus a larger pool of Faker-generated ones so
+# there's enough variety to fill a full carousel row per city.
 HOSTS = [
     ("Maria Gonzalez", "maria@example.com"),
     ("James Chen", "james@example.com"),
@@ -65,12 +73,12 @@ HOSTS = [
     ("Lucas Martin", "lucas@example.com"),
     ("Sophie Dubois", "sophie@example.com"),
     ("Ravi Patel", "ravi@example.com"),
-]
+] + [(fake.unique.name(), fake.unique.email()) for _ in range(14)]
 
 GUESTS = [
     ("Emma Wilson", "emma@example.com"),
     ("Noah Johnson", "noah@example.com"),
-]
+] + [(fake.unique.name(), fake.unique.email()) for _ in range(8)]
 
 CITIES = [
     ("Austin", "TX", "USA", 30.2672, -97.7431),
@@ -102,6 +110,41 @@ DESCRIPTION = (
     "activities. Perfect for couples, families, or small groups looking for a memorable "
     "stay. The space is kept immaculately clean and is fully equipped with everything "
     "you need for a relaxing visit."
+)
+
+EXPERIENCE_TITLE_TEMPLATES = [
+    "Sunset photography walk in {city}",
+    "Local food crawl through {city}",
+    "Pottery & ceramics workshop in {city}",
+    "Sunrise hike with a local guide near {city}",
+    "Craft cocktail masterclass in {city}",
+    "Street art & mural tour of {city}",
+    "Live jazz night with a local musician in {city}",
+    "Farm-to-table cooking class in {city}",
+]
+
+EXPERIENCE_DESCRIPTION = (
+    "Join a passionate local host for a hands-on, small-group experience you won't find "
+    "in any guidebook. All skill levels welcome — equipment and light refreshments are "
+    "included. A great way to meet fellow travelers and see the destination the way "
+    "locals do."
+)
+
+SERVICE_TITLE_TEMPLATES = [
+    "Professional photography session in {city}",
+    "Private yoga & wellness session in {city}",
+    "Bridal hair & makeup by a local artist in {city}",
+    "In-home massage therapy in {city}",
+    "Personal chef dinner experience in {city}",
+    "Event & party planning consultation in {city}",
+    "Handyman & furniture assembly service in {city}",
+    "Professional home cleaning in {city}",
+]
+
+SERVICE_DESCRIPTION = (
+    "Book a trusted, background-checked local professional to come to you. Flexible "
+    "scheduling, transparent pricing, and satisfaction guaranteed — message the provider "
+    "after booking to share any special requests."
 )
 
 
@@ -150,8 +193,10 @@ def seed(force: bool = False) -> None:
         property_types = list(PropertyType)
         categories = list(Category)
 
+        LISTINGS_PER_CITY = 8
+
         listings: list[Listing] = []
-        for i in range(28):
+        for i in range(LISTINGS_PER_CITY * len(CITIES)):
             host = hosts[i % len(hosts)]
             city, state, country, lat, lng = CITIES[i % len(CITIES)]
             ptype = property_types[i % len(property_types)]
@@ -184,6 +229,46 @@ def seed(force: bool = False) -> None:
             listing.amenity_links = [ListingAmenity(amenity_id=a.id) for a in chosen_amenities]
 
             listings.append(listing)
+
+        # Experiences and services reuse the exact same Listing model/booking flow as
+        # homes (just a different listing_type and per-guest, not per-night, framing),
+        # so they get carousel rows, detail pages, maps, and bookings for free.
+        for kind, templates, description, price_range in (
+            (ListingType.EXPERIENCE, EXPERIENCE_TITLE_TEMPLATES, EXPERIENCE_DESCRIPTION, (25, 220)),
+            (ListingType.SERVICE, SERVICE_TITLE_TEMPLATES, SERVICE_DESCRIPTION, (40, 300)),
+        ):
+            for i in range(LISTINGS_PER_CITY * len(CITIES)):
+                host = hosts[i % len(hosts)]
+                city, state, country, lat, lng = CITIES[i % len(CITIES)]
+                ptype = property_types[i % len(property_types)]
+                category = categories[i % len(categories)]
+                title = random.choice(templates).format(city=city)
+
+                listing = Listing(
+                    host_id=host.id,
+                    listing_type=kind,
+                    title=title,
+                    description=description,
+                    property_type=ptype,
+                    category=category,
+                    address=f"{100 + i} {random.choice(['Main St', 'Ocean Ave', 'Park Rd', 'Hilltop Ln'])}",
+                    city=city,
+                    state=state,
+                    country=country,
+                    latitude=lat + random.uniform(-0.03, 0.03),
+                    longitude=lng + random.uniform(-0.03, 0.03),
+                    price_per_night=round(random.uniform(*price_range), 0),
+                    cleaning_fee=0,
+                    service_fee_rate=0.12,
+                    max_guests=random.randint(2, 15),
+                    bedrooms=0,
+                    beds=0,
+                    bathrooms=0,
+                )
+                photo_ids = random.sample(PROPERTY_PHOTO_IDS, k=6)
+                listing.photos = [ListingPhoto(url=_unsplash(pid), sort_order=j) for j, pid in enumerate(photo_ids)]
+
+                listings.append(listing)
 
         db.add_all(listings)
         db.commit()

@@ -8,6 +8,7 @@ import { ToastProvider } from "@/lib/toast-context";
 import { AuthModalProvider } from "@/lib/auth-modal-context";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,8 +21,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Airbnb Clone",
+  title: "Airbnb",
   description: "Browse, book, and host stays — a fullstack Airbnb clone.",
+  manifest: "/assets/fevicon/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/assets/fevicon/favicon.ico" },
+      { url: "/assets/fevicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/assets/fevicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/assets/fevicon/apple-touch-icon.png" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,8 +46,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <ToastProvider>
               <AuthModalProvider>
                 <Navbar />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 pb-16 md:pb-0">{children}</main>
                 <Footer />
+                <MobileTabBar />
               </AuthModalProvider>
             </ToastProvider>
           </AuthProvider>

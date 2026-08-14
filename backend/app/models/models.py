@@ -35,6 +35,14 @@ class PropertyType(str, enum.Enum):
     TREEHOUSE = "treehouse"
 
 
+class ListingType(str, enum.Enum):
+    """Which Airbnb product a listing belongs to — drives the nav tab it shows under."""
+
+    HOME = "home"
+    EXPERIENCE = "experience"
+    SERVICE = "service"
+
+
 class Category(str, enum.Enum):
     """Airbnb-style browse categories shown in the home page category row."""
 
@@ -81,6 +89,7 @@ class Listing(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     host_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    listing_type: Mapped[ListingType] = mapped_column(Enum(ListingType), default=ListingType.HOME, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     property_type: Mapped[PropertyType] = mapped_column(Enum(PropertyType), nullable=False)

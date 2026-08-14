@@ -32,6 +32,7 @@ def to_card(listing: Listing, rating: float, review_count: int, is_favorited: bo
     cover = listing.photos[0].url if listing.photos else None
     return ListingCardOut(
         id=listing.id,
+        listing_type=listing.listing_type,
         title=listing.title,
         city=listing.city,
         country=listing.country,
@@ -48,6 +49,7 @@ def to_card(listing: Listing, rating: float, review_count: int, is_favorited: bo
 def to_detail(listing: Listing, rating: float, review_count: int, is_favorited: bool) -> ListingDetailOut:
     return ListingDetailOut(
         id=listing.id,
+        listing_type=listing.listing_type,
         host=listing.host,
         title=listing.title,
         description=listing.description,

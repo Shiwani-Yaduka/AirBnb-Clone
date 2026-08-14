@@ -49,6 +49,7 @@ export function BookingWidget({ listing }: { listing: ListingDetail }) {
     [bookedRanges]
   );
 
+  const priceUnit = listing.listing_type === "home" ? "night" : "guest";
   const isOwnListing = user?.id === listing.host.id;
   const nights = range?.from && range?.to ? differenceInCalendarDays(range.to, range.from) : 0;
   const subtotal = nights * listing.price_per_night;
@@ -90,7 +91,7 @@ export function BookingWidget({ listing }: { listing: ListingDetail }) {
     <div className="sticky top-24 rounded-2xl border border-line p-6 shadow-xl">
       <div className="mb-4 flex items-baseline gap-1">
         <span className="text-xl font-semibold">${listing.price_per_night.toLocaleString()}</span>
-        <span className="text-neutral-600">night</span>
+        <span className="text-neutral-600">{priceUnit}</span>
       </div>
 
       <div className="relative rounded-xl border border-neutral-400">
@@ -170,7 +171,8 @@ export function BookingWidget({ listing }: { listing: ListingDetail }) {
         <div className="mt-5 flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="underline">
-              ${listing.price_per_night.toLocaleString()} x {nights} night{nights > 1 ? "s" : ""}
+              ${listing.price_per_night.toLocaleString()} x {nights} {priceUnit}
+              {nights > 1 ? "s" : ""}
             </span>
             <span>${subtotal.toLocaleString()}</span>
           </div>

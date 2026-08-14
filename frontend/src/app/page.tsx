@@ -3,9 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { listingsApi, ApiError } from "@/lib/api";
-import type { ListingCard as ListingCardType, Category } from "@/lib/types";
+import type { ListingCard as ListingCardType, Category, CitySection } from "@/lib/types";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { ListingGridSkeleton } from "@/components/listing/ListingGridSkeleton";
+import { ListingCarouselRow } from "@/components/listing/ListingCarouselRow";
+import { CarouselRowSkeleton } from "@/components/listing/CarouselRowSkeleton";
 import { FilterPanel, EMPTY_FILTERS, type Filters } from "@/components/search/FilterPanel";
 import { Pagination } from "@/components/ui/Pagination";
 
@@ -14,6 +16,7 @@ const PAGE_SIZE = 20;
 function HomeContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") as Category | null;
+  const type = searchParams.get("type") as "experience" | "service" | null;
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -23,10 +26,23 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [sections, setSections] = useState<CitySection[]>([]);
+  const [isLoadingSections, setIsLoadingSections] = useState(true);
+  const [sectionsError, setSectionsError] = useState<string | null>(null);
+
   const location = searchParams.get("location") ?? undefined;
   const checkIn = searchParams.get("check_in") ?? undefined;
   const checkOut = searchParams.get("check_out") ?? undefined;
   const guests = searchParams.get("guests");
+
+  const activeFilterCount =
+    (filters.minPrice ? 1 : 0) +
+    (filters.maxPrice ? 1 : 0) +
+    (filters.propertyType ? 1 : 0) +
+    filters.amenityIds.length;
+
+  // No search/filter active: show the curated city-carousel homepage instead of a flat results grid.
+  const isBrowsing = !location && !checkIn && !checkOut && !guests && !category && activeFilterCount === 0;
 
   // Reset to page 1 whenever the effective query changes.
   useEffect(() => {
@@ -34,6 +50,10 @@ function HomeContent() {
   }, [location, checkIn, checkOut, guests, category, filters]);
 
   useEffect(() => {
+    if (isBrowsing) {
+      setIsLoading(false);
+      return;
+    }
     let cancelled = false;
     setIsLoading(true);
     setError(null);
@@ -48,6 +68,7 @@ function HomeContent() {
         max_price: filters.maxPrice ? Number(filters.maxPrice) : undefined,
         property_type: filters.propertyType ?? undefined,
         category: category ?? undefined,
+        listing_type: type ?? undefined,
         amenity_ids: filters.amenityIds,
         page,
         page_size: PAGE_SIZE,
@@ -68,32 +89,74 @@ function HomeContent() {
     return () => {
       cancelled = true;
     };
-  }, [location, checkIn, checkOut, guests, category, filters, page]);
+  }, [isBrowsing, location, checkIn, checkOut, guests, category, filters, page, type]);
 
-  const activeFilterCount =
-    (filters.minPrice ? 1 : 0) +
-    (filters.maxPrice ? 1 : 0) +
-    (filters.propertyType ? 1 : 0) +
-    filters.amenityIds.length;
+  useEffect(() => {
+    if (!isBrowsing) return;
+    let cancelled = false;
+    setIsLoadingSections(true);
+    setSectionsError(null);
+
+    listingsApi
+      .homeSections(type ?? undefined)
+      .then((result) => {
+        if (!cancelled) setSections(result);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSectionsError(err instanceof ApiError ? err.message : "Failed to load listings");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingSections(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isBrowsing, type]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            {location && <p className="text-sm text-neutral-500">Showing results for &ldquo;{location}&rdquo;</p>}
+        {!isBrowsing && (
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              {location && <p className="text-sm text-neutral-500">Showing results for &ldquo;{location}&rdquo;</p>}
+            </div>
+            <button
+              onClick={() => setFilterOpen(true)}
+              className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-medium shadow-sm hover:shadow-md"
+            >
+              ⚙️ Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+            </button>
           </div>
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-medium shadow-sm hover:shadow-md"
-          >
-            ⚙️ Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-          </button>
-        </div>
+        )}
 
-        {isLoading ? (
+        {isBrowsing ? (
+          isLoadingSections ? (
+            <CarouselRowSkeleton />
+          ) : sectionsError ? (
+            <p className="py-20 text-center text-neutral-500">{sectionsError}</p>
+          ) : (
+            <div className="flex flex-col gap-10">
+              {sections.map((section) => (
+                <ListingCarouselRow
+                  key={`${section.city}-${section.country}`}
+                  title={
+                    type === "experience"
+                      ? `Experiences in ${section.city}`
+                      : type === "service"
+                        ? `Services in ${section.city}`
+                        : `Stay in ${section.city}`
+                  }
+                  listings={section.listings}
+                />
+              ))}
+            </div>
+          )
+        ) : isLoading ? (
           <ListingGridSkeleton />
         ) : error ? (
           <p className="py-20 text-center text-neutral-500">{error}</p>
@@ -120,6 +183,7 @@ function HomeContent() {
         onClose={() => setFilterOpen(false)}
         filters={filters}
         onApply={setFilters}
+        listingType={type ?? undefined}
       />
     </div>
   );

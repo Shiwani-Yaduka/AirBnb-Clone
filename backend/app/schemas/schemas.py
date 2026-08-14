@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models.models import BookingStatus, Category, PropertyType
+from app.models.models import BookingStatus, Category, ListingType, PropertyType
 
 # ---------- Auth / Users ----------
 # Signup/login are handled by Clerk on the frontend; UserOut is the local,
@@ -55,6 +55,7 @@ class ListingPhotoOut(BaseModel):
 
 
 class ListingBase(BaseModel):
+    listing_type: ListingType = ListingType.HOME
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1)
     property_type: PropertyType
@@ -101,6 +102,7 @@ class ListingCardOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    listing_type: ListingType
     title: str
     city: str
     country: str
@@ -117,6 +119,7 @@ class ListingDetailOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    listing_type: ListingType
     host: HostOut
     title: str
     description: str
@@ -148,6 +151,14 @@ class ListingSearchResult(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ListingCitySection(BaseModel):
+    """One horizontally-scrollable row of listings for a single city, for the homepage."""
+
+    city: str
+    country: str
+    listings: list[ListingCardOut]
 
 
 # ---------- Bookings ----------

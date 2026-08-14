@@ -25,11 +25,13 @@ interface FilterPanelProps {
   onClose: () => void;
   filters: Filters;
   onApply: (filters: Filters) => void;
+  /** Listing type currently being browsed; the "Property type" section only applies to "home". */
+  listingType?: string;
 }
 
 const PROPERTY_TYPES = Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[];
 
-export function FilterPanel({ isOpen, onClose, filters, onApply }: FilterPanelProps) {
+export function FilterPanel({ isOpen, onClose, filters, onApply, listingType }: FilterPanelProps) {
   const [draft, setDraft] = useState<Filters>(filters);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
 
@@ -74,26 +76,28 @@ export function FilterPanel({ isOpen, onClose, filters, onApply }: FilterPanelPr
           </div>
         </section>
 
-        <section>
-          <h3 className="mb-3 font-semibold">Property type</h3>
-          <div className="flex flex-wrap gap-2">
-            {PROPERTY_TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() =>
-                  setDraft((d) => ({ ...d, propertyType: d.propertyType === type ? null : type }))
-                }
-                className={`rounded-full border px-4 py-2 text-sm transition ${
-                  draft.propertyType === type
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-line hover:border-neutral-900"
-                }`}
-              >
-                {PROPERTY_TYPE_LABELS[type]}
-              </button>
-            ))}
-          </div>
-        </section>
+        {(!listingType || listingType === "home") && (
+          <section>
+            <h3 className="mb-3 font-semibold">Property type</h3>
+            <div className="flex flex-wrap gap-2">
+              {PROPERTY_TYPES.map((type) => (
+                <button
+                  key={type}
+                  onClick={() =>
+                    setDraft((d) => ({ ...d, propertyType: d.propertyType === type ? null : type }))
+                  }
+                  className={`rounded-full border px-4 py-2 text-sm transition ${
+                    draft.propertyType === type
+                      ? "border-neutral-900 bg-neutral-900 text-white"
+                      : "border-line hover:border-neutral-900"
+                  }`}
+                >
+                  {PROPERTY_TYPE_LABELS[type]}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section>
           <h3 className="mb-3 font-semibold">Amenities</h3>

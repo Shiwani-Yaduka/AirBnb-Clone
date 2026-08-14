@@ -13,6 +13,7 @@ export function ListingCard({ listing }: { listing: ListingCardType }) {
           <img
             src={listing.cover_photo_url}
             alt={listing.title}
+            loading="lazy"
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
@@ -34,7 +35,8 @@ export function ListingCard({ listing }: { listing: ListingCardType }) {
           {listing.city}, {listing.country}
         </p>
         <p className="mt-0.5 text-sm text-neutral-900">
-          <span className="font-semibold">${listing.price_per_night.toLocaleString()}</span> night
+          <span className="font-semibold">${listing.price_per_night.toLocaleString()}</span>{" "}
+          {listing.listing_type === "home" ? "night" : "guest"}
           {listing.review_count > 0 && (
             <>
               {" "}

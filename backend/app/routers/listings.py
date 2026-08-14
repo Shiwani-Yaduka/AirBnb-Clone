@@ -15,10 +15,17 @@ from app.models.models import (
     Listing,
     ListingAmenity,
     ListingPhoto,
+    ListingType,
     PropertyType,
     User,
 )
-from app.schemas.schemas import ListingCreate, ListingDetailOut, ListingSearchResult, ListingUpdate
+from app.schemas.schemas import (
+    ListingCitySection,
+    ListingCreate,
+    ListingDetailOut,
+    ListingSearchResult,
+    ListingUpdate,
+)
 from app.services.listing_view import get_favorited_ids, get_rating_map, to_card, to_detail
 
 router = APIRouter(prefix="/listings", tags=["listings"])
@@ -28,6 +35,7 @@ LISTING_LOAD_OPTIONS = (selectinload(Listing.photos), selectinload(Listing.host)
 
 @router.get("", response_model=ListingSearchResult)
 def search_listings(
+    listing_type: ListingType | None = None,
     location: str | None = Query(default=None, description="Matches city, state, or country"),
     check_in: date | None = None,
     check_out: date | None = None,
@@ -48,6 +56,7 @@ def search_listings(
 
     stmt = select(Listing).options(*LISTING_LOAD_OPTIONS)
 
+    stmt = stmt.where(Listing.listing_type == (listing_type or ListingType.HOME))
     if location:
         like = f"%{location.lower()}%"
         stmt = stmt.where(
@@ -89,6 +98,45 @@ def search_listings(
         for listing in page_items
     ]
     return ListingSearchResult(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/home-sections", response_model=list[ListingCitySection])
+def home_sections(
+    listing_type: ListingType | None = None,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+) -> list[ListingCitySection]:
+    """Curated homepage rows: one carousel per city that has enough listings to fill a row."""
+    MIN_PER_CITY = 5
+    MAX_PER_CITY = 8
+
+    stmt = (
+        select(Listing)
+        .options(*LISTING_LOAD_OPTIONS)
+        .where(Listing.listing_type == (listing_type or ListingType.HOME))
+        .order_by(Listing.created_at.desc())
+    )
+    all_listings = list(db.execute(stmt).unique().scalars().all())
+
+    by_city: dict[tuple[str, str], list[Listing]] = {}
+    for listing in all_listings:
+        by_city.setdefault((listing.city, listing.country), []).append(listing)
+
+    listing_ids = [listing.id for listing in all_listings]
+    rating_map = get_rating_map(db, listing_ids)
+    favorited_ids = get_favorited_ids(db, current_user.id if current_user else None, listing_ids)
+
+    sections: list[ListingCitySection] = []
+    for (city, country), city_listings in by_city.items():
+        if len(city_listings) < MIN_PER_CITY:
+            continue
+        cards = [
+            to_card(listing, *rating_map.get(listing.id, (0.0, 0)), listing.id in favorited_ids)
+            for listing in city_listings[:MAX_PER_CITY]
+        ]
+        sections.append(ListingCitySection(city=city, country=country, listings=cards))
+
+    return sections
 
 
 @router.get("/{listing_id}", response_model=ListingDetailOut)

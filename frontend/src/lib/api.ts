@@ -5,6 +5,7 @@ import type {
   Booking,
   BookingWithGuest,
   BookingWithListing,
+  CitySection,
   ListingCard,
   ListingDetail,
   ListingFormInput,
@@ -26,11 +27,17 @@ export class ApiError extends Error {
 // Clerk's getToken() waits for the SDK to finish loading and reads the session
 // token outside React, so this fetch wrapper doesn't need every call site to be
 // a component threading a token through. Falls back to unauthenticated on any
-// failure (not signed in, offline, load timeout) rather than blocking the request.
+// failure (not signed in, offline) or if Clerk's cold-start SDK init is still
+// running after 3s, so a slow-loading auth SDK can't stall public data fetches
+// (browsing/search need no auth at all, and RequireAuth-gated pages already
+// wait on the same SDK's isLoaded flag before rendering protected content).
 async function getAuthToken(): Promise<string | null> {
   if (typeof window === "undefined") return null;
   try {
-    return await getClerkToken();
+    return await Promise.race([
+      getClerkToken(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
   } catch {
     return null;
   }
@@ -73,6 +80,7 @@ export const authApi = {
 // ---------- Listings ----------
 
 export interface ListingSearchParams {
+  listing_type?: string;
   location?: string;
   check_in?: string;
   check_out?: string;
@@ -103,6 +111,8 @@ function buildQuery(params: object): string {
 export const listingsApi = {
   search: (params: ListingSearchParams) =>
     request<ListingSearchResult>(`/listings${buildQuery(params)}`),
+  homeSections: (listingType?: string) =>
+    request<CitySection[]>(`/listings/home-sections${buildQuery({ listing_type: listingType })}`),
   get: (id: number) => request<ListingDetail>(`/listings/${id}`),
   availability: (id: number) =>
     request<{ booked_ranges: BookedRange[] }>(`/listings/${id}/availability`),

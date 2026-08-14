@@ -73,12 +73,23 @@ export default function ListingDetailPage() {
           <div className="flex items-center justify-between border-b border-line pb-8">
             <div>
               <h2 className="text-xl font-semibold">
-                {PROPERTY_TYPE_LABELS[listing.property_type]} hosted by {listing.host.name}
+                {listing.listing_type === "experience"
+                  ? "Experience"
+                  : listing.listing_type === "service"
+                    ? "Service"
+                    : PROPERTY_TYPE_LABELS[listing.property_type]}{" "}
+                hosted by {listing.host.name}
               </h2>
               <p className="text-neutral-600">
-                {listing.max_guests} guests · {listing.bedrooms} bedroom{listing.bedrooms !== 1 ? "s" : ""} ·{" "}
-                {listing.beds} bed{listing.beds !== 1 ? "s" : ""} · {listing.bathrooms} bath
-                {listing.bathrooms !== 1 ? "s" : ""}
+                {listing.listing_type === "home" ? (
+                  <>
+                    {listing.max_guests} guests · {listing.bedrooms} bedroom{listing.bedrooms !== 1 ? "s" : ""} ·{" "}
+                    {listing.beds} bed{listing.beds !== 1 ? "s" : ""} · {listing.bathrooms} bath
+                    {listing.bathrooms !== 1 ? "s" : ""}
+                  </>
+                ) : (
+                  <>{listing.max_guests} guests max</>
+                )}
               </p>
             </div>
             <Avatar name={listing.host.name} src={listing.host.avatar_url} size={56} />
@@ -99,9 +110,11 @@ export default function ListingDetailPage() {
 
           <p className="whitespace-pre-line text-neutral-700">{listing.description}</p>
 
-          <div className="border-t border-line pt-8">
-            <AmenitiesList amenities={listing.amenities} />
-          </div>
+          {listing.amenities.length > 0 && (
+            <div className="border-t border-line pt-8">
+              <AmenitiesList amenities={listing.amenities} />
+            </div>
+          )}
 
           <div className="border-t border-line pt-8">
             <h2 className="mb-4 text-xl font-semibold">Where you&apos;ll be</h2>

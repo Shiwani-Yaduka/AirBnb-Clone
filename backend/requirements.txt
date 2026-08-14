@@ -11,6 +11,7 @@ colorama==0.4.6
 cryptography==50.0.0
 dnspython==2.8.0
 email-validator==2.3.0
+faker==38.1.0
 fastapi==0.141.1
 greenlet==3.5.5
 h11==0.16.0

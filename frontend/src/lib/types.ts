@@ -1,3 +1,5 @@
+export type ListingType = "home" | "experience" | "service";
+
 export type PropertyType =
   | "house"
   | "apartment"
@@ -44,6 +46,7 @@ export interface ListingPhoto {
 
 export interface ListingCard {
   id: number;
+  listing_type: ListingType;
   title: string;
   city: string;
   country: string;
@@ -67,6 +70,7 @@ export interface Host {
 
 export interface ListingDetail {
   id: number;
+  listing_type: ListingType;
   host: Host;
   title: string;
   description: string;
@@ -98,6 +102,12 @@ export interface ListingSearchResult {
   total: number;
   page: number;
   page_size: number;
+}
+
+export interface CitySection {
+  city: string;
+  country: string;
+  listings: ListingCard[];
 }
 
 export type BookingStatus = "confirmed" | "cancelled";
