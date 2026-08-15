@@ -13,6 +13,7 @@ import { FilterPanel, EMPTY_FILTERS, type Filters } from "@/components/search/Fi
 import { Pagination } from "@/components/ui/Pagination";
 
 const SearchResultsMap = dynamic(() => import("@/components/search/SearchResultsMap"), { ssr: false });
+const ExploreMap = dynamic(() => import("@/components/map/ExploreMap"), { ssr: false });
 
 const PAGE_SIZE = 20;
 
@@ -34,6 +35,10 @@ function HomeContent() {
   const [sectionsError, setSectionsError] = useState<string | null>(null);
 
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+
+  const [showMap, setShowMap] = useState(false);
+  const [mapListings, setMapListings] = useState<ListingCardType[]>([]);
+  const [isLoadingMapListings, setIsLoadingMapListings] = useState(false);
 
   const location = searchParams.get("location") ?? undefined;
   const checkIn = searchParams.get("check_in") ?? undefined;
@@ -124,24 +129,69 @@ function HomeContent() {
     };
   }, [isBrowsing, type]);
 
+  useEffect(() => {
+    if (!showMap) return;
+    let cancelled = false;
+    setIsLoadingMapListings(true);
+
+    listingsApi
+      .forMap(type ?? undefined, location)
+      .then((result) => {
+        if (!cancelled) setMapListings(result);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingMapListings(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showMap, type, location]);
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  if (showMap) {
+    return (
+      <div className="relative h-[calc(100vh-4.5rem)] w-full">
+        {isLoadingMapListings ? (
+          <div className="flex h-full items-center justify-center text-neutral-500">Loading map…</div>
+        ) : (
+          <ExploreMap listings={mapListings} />
+        )}
+        <button
+          onClick={() => setShowMap(false)}
+          className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white shadow-xl hover:bg-neutral-800"
+        >
+          Show list
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8">
-        {!isBrowsing && (
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              {location && <p className="text-sm text-neutral-500">Showing results for &ldquo;{location}&rdquo;</p>}
-            </div>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            {location && <p className="text-sm text-neutral-500">Showing results for &ldquo;{location}&rdquo;</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            {!isBrowsing && (
+              <button
+                onClick={() => setFilterOpen(true)}
+                className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-medium shadow-sm hover:shadow-md"
+              >
+                ⚙️ Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+              </button>
+            )}
             <button
-              onClick={() => setFilterOpen(true)}
+              onClick={() => setShowMap(true)}
               className="flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-medium shadow-sm hover:shadow-md"
             >
-              ⚙️ Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+              🗺️ Show map
             </button>
           </div>
-        )}
+        </div>
 
         {isBrowsing ? (
           isLoadingSections ? (

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.models import Booking, BookingStatus, Review, User
+from app.models.models import Booking, BookingStatus, Review, ReviewPhoto, User
 from app.schemas.schemas import ReviewCreate, ReviewOut
 
 router = APIRouter(tags=["reviews"])
@@ -18,7 +18,7 @@ def list_reviews(listing_id: int, db: Session = Depends(get_db)) -> list[ReviewO
     """All reviews for a listing, most recent first."""
     stmt = (
         select(Review)
-        .options(selectinload(Review.guest))
+        .options(selectinload(Review.guest), selectinload(Review.photos))
         .where(Review.listing_id == listing_id)
         .order_by(Review.created_at.desc())
     )
@@ -32,6 +32,7 @@ def list_reviews(listing_id: int, db: Session = Depends(get_db)) -> list[ReviewO
             guest_avatar_url=r.guest.avatar_url,
             rating=r.rating,
             comment=r.comment,
+            photo_urls=[p.url for p in r.photos],
             created_at=r.created_at,
         )
         for r in reviews
@@ -62,6 +63,7 @@ def leave_review(
         guest_id=current_user.id,
         rating=payload.rating,
         comment=payload.comment,
+        photos=[ReviewPhoto(url=url, sort_order=i) for i, url in enumerate(payload.photo_urls)],
     )
     db.add(review)
     db.commit()
@@ -74,5 +76,6 @@ def leave_review(
         guest_avatar_url=current_user.avatar_url,
         rating=review.rating,
         comment=review.comment,
+        photo_urls=[p.url for p in review.photos],
         created_at=review.created_at,
     )

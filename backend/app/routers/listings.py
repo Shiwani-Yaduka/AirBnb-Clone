@@ -20,6 +20,7 @@ from app.models.models import (
     User,
 )
 from app.schemas.schemas import (
+    ListingCardOut,
     ListingCitySection,
     ListingCreate,
     ListingDetailOut,
@@ -31,6 +32,16 @@ from app.services.listing_view import get_favorited_ids, get_rating_map, to_card
 router = APIRouter(prefix="/listings", tags=["listings"])
 
 LISTING_LOAD_OPTIONS = (selectinload(Listing.photos), selectinload(Listing.host), selectinload(Listing.amenity_links).selectinload(ListingAmenity.amenity))
+
+# Cities featured as carousel rows on the homepage — an Airbnb-style curated
+# pick, not "every city with listings" (every other seeded city, India and
+# elsewhere, is still fully reachable via search/browse and the map).
+POPULAR_HOME_CITIES = [
+    ("Goa", "India"),
+    ("Mumbai", "India"),
+    ("Jaipur", "India"),
+    ("New Delhi", "India"),
+]
 
 
 @router.get("", response_model=ListingSearchResult)
@@ -106,7 +117,7 @@ def home_sections(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
 ) -> list[ListingCitySection]:
-    """Curated homepage rows: one carousel per city that has enough listings to fill a row."""
+    """Curated homepage rows: one carousel for each of the featured popular cities."""
     MIN_PER_CITY = 5
     MAX_PER_CITY = 8
 
@@ -127,7 +138,8 @@ def home_sections(
     favorited_ids = get_favorited_ids(db, current_user.id if current_user else None, listing_ids)
 
     sections: list[ListingCitySection] = []
-    for (city, country), city_listings in by_city.items():
+    for city, country in POPULAR_HOME_CITIES:
+        city_listings = by_city.get((city, country), [])
         if len(city_listings) < MIN_PER_CITY:
             continue
         cards = [
@@ -137,6 +149,34 @@ def home_sections(
         sections.append(ListingCitySection(city=city, country=country, listings=cards))
 
     return sections
+
+
+@router.get("/map", response_model=list[ListingCardOut])
+def listings_for_map(
+    listing_type: ListingType | None = None,
+    location: str | None = Query(default=None, description="Matches city, state, or country"),
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+) -> list[ListingCardOut]:
+    """Every matching listing, unpaginated, for the full-map explore view."""
+    stmt = select(Listing).options(*LISTING_LOAD_OPTIONS).where(
+        Listing.listing_type == (listing_type or ListingType.HOME)
+    )
+    if location:
+        like = f"%{location.lower()}%"
+        stmt = stmt.where(
+            (Listing.city.ilike(like)) | (Listing.state.ilike(like)) | (Listing.country.ilike(like))
+        )
+
+    listings = list(db.execute(stmt).unique().scalars().all())
+    listing_ids = [listing.id for listing in listings]
+    rating_map = get_rating_map(db, listing_ids)
+    favorited_ids = get_favorited_ids(db, current_user.id if current_user else None, listing_ids)
+
+    return [
+        to_card(listing, *rating_map.get(listing.id, (0.0, 0)), listing.id in favorited_ids)
+        for listing in listings
+    ]
 
 
 @router.get("/{listing_id}", response_model=ListingDetailOut)

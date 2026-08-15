@@ -149,6 +149,7 @@ export interface Review {
   guest_avatar_url: string | null;
   rating: number;
   comment: string;
+  photo_urls: string[];
   created_at: string;
 }
 

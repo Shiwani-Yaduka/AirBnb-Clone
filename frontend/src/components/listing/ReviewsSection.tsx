@@ -37,6 +37,19 @@ export function ReviewsSection({
                 </div>
               </div>
               <p className="text-sm text-neutral-700">{review.comment}</p>
+              {review.photo_urls.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {review.photo_urls.map((url) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={url}
+                      src={url}
+                      alt="Guest photo"
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

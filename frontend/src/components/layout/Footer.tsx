@@ -20,6 +20,13 @@ const DESTINATIONS: { city: string; type: string }[] = [
   { city: "London", type: "Monthly Rentals" },
   { city: "Joshua Tree", type: "Holiday rentals" },
   { city: "Nashville", type: "Apartment rentals" },
+  { city: "Mumbai", type: "Apartment rentals" },
+  { city: "New Delhi", type: "Monthly Rentals" },
+  { city: "Goa", type: "Villa rentals" },
+  { city: "Jaipur", type: "Heritage homes" },
+  { city: "Udaipur", type: "Palace stays" },
+  { city: "Kochi", type: "Houseboat rentals" },
+  { city: "Bengaluru", type: "Loft rentals" },
 ];
 
 const LINK_COLUMNS: { heading: string; links: string[] }[] = [

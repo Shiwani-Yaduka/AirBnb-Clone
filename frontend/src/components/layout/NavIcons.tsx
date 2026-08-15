@@ -1,18 +1,33 @@
 "use client";
 
+import { useId } from "react";
+
 interface IconProps {
   className?: string;
 }
 
-// Simplified globe, styled after Airbnb's "All" tab icon (gold sphere with meridian lines).
+// Globe styled after Airbnb's "All" tab icon: a shaded gold sphere (radial gradient +
+// specular highlight) with meridian lines, so it reads as 3-D rather than a flat disc.
+// Gradient id is unique per instance since desktop/mobile nav can both be in the DOM at once.
 export function GlobeIcon({ className }: IconProps) {
+  const gradientId = useId();
   return (
-    <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="16" cy="16" r="13" fill="#DDA520" />
-      <ellipse cx="16" cy="16" rx="5.5" ry="13" stroke="#8A6200" strokeWidth="1.4" />
-      <line x1="3" y1="16" x2="29" y2="16" stroke="#8A6200" strokeWidth="1.4" />
-      <path d="M5 10.5C9 13 23 13 27 10.5" stroke="#8A6200" strokeWidth="1.4" />
-      <path d="M5 21.5C9 19 23 19 27 21.5" stroke="#8A6200" strokeWidth="1.4" />
+    <svg viewBox="0 0 32 32" className={className} xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id={gradientId} cx="35%" cy="30%" r="80%">
+          <stop offset="0%" stopColor="#F6CE73" />
+          <stop offset="55%" stopColor="#DDA520" />
+          <stop offset="100%" stopColor="#A06B00" />
+        </radialGradient>
+      </defs>
+      <circle cx="16" cy="16" r="13" fill={`url(#${gradientId})`} />
+      <g fill="none" stroke="#8A6200" strokeWidth="1.3" opacity="0.55">
+        <ellipse cx="16" cy="16" rx="5.5" ry="13" />
+        <line x1="3" y1="16" x2="29" y2="16" />
+        <path d="M5 10.5C9 13 23 13 27 10.5" />
+        <path d="M5 21.5C9 19 23 19 27 21.5" />
+      </g>
+      <ellipse cx="12" cy="10.5" rx="4" ry="2.4" fill="#FFFFFF" opacity="0.35" />
     </svg>
   );
 }

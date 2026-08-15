@@ -118,7 +118,18 @@ export default function ListingDetailPage() {
 
           <div className="border-t border-line pt-8">
             <h2 className="mb-4 text-xl font-semibold">Where you&apos;ll be</h2>
-            <ListingMap latitude={listing.latitude} longitude={listing.longitude} city={listing.city} />
+            <ListingMap
+              id={listing.id}
+              latitude={listing.latitude}
+              longitude={listing.longitude}
+              city={listing.city}
+              country={listing.country}
+              title={listing.title}
+              price_per_night={listing.price_per_night}
+              cover_photo_url={listing.photos[0]?.url ?? null}
+              rating={listing.rating}
+              review_count={listing.review_count}
+            />
           </div>
 
           <div className="border-t border-line pt-8">

@@ -127,6 +127,44 @@ CITIES = [
     ("Nashville", "TN", "USA", 36.1627, -86.7816),
 ]
 
+# Real city/state names and coordinates for major Indian destinations; listing
+# content itself (title/description/host/price) is generated demo data like
+# every other city above. Geographically accurate so map pins land correctly.
+INDIA_CITIES = [
+    ("Mumbai", "Maharashtra", "India", 19.0760, 72.8777),
+    ("New Delhi", "Delhi", "India", 28.6139, 77.2090),
+    ("Bengaluru", "Karnataka", "India", 12.9716, 77.5946),
+    ("Goa", None, "India", 15.2993, 74.1240),
+    ("Jaipur", "Rajasthan", "India", 26.9124, 75.7873),
+    ("Udaipur", "Rajasthan", "India", 24.5854, 73.7125),
+    ("Jodhpur", "Rajasthan", "India", 26.2389, 73.0243),
+    ("Agra", "Uttar Pradesh", "India", 27.1767, 78.0081),
+    ("Varanasi", "Uttar Pradesh", "India", 25.3176, 82.9739),
+    ("Kochi", "Kerala", "India", 9.9312, 76.2673),
+    ("Munnar", "Kerala", "India", 10.0889, 77.0595),
+    ("Alleppey", "Kerala", "India", 9.4981, 76.3388),
+    ("Manali", "Himachal Pradesh", "India", 32.2432, 77.1892),
+    ("Shimla", "Himachal Pradesh", "India", 31.1048, 77.1734),
+    ("Rishikesh", "Uttarakhand", "India", 30.0869, 78.2676),
+    ("Darjeeling", "West Bengal", "India", 27.0410, 88.2663),
+    ("Leh", "Ladakh", "India", 34.1526, 77.5771),
+    ("Pondicherry", None, "India", 11.9416, 79.8083),
+    ("Amritsar", "Punjab", "India", 31.6340, 74.8723),
+    ("Mysuru", "Karnataka", "India", 12.2958, 76.6394),
+    ("Hyderabad", "Telangana", "India", 17.3850, 78.4867),
+    ("Chennai", "Tamil Nadu", "India", 13.0827, 80.2707),
+    ("Kolkata", "West Bengal", "India", 22.5726, 88.3639),
+    ("Pune", "Maharashtra", "India", 18.5204, 73.8567),
+    ("Ahmedabad", "Gujarat", "India", 23.0225, 72.5714),
+    ("Chandigarh", None, "India", 30.7333, 76.7794),
+    ("Coorg", "Karnataka", "India", 12.4244, 75.7382),
+    ("Ooty", "Tamil Nadu", "India", 11.4102, 76.6950),
+    ("Gangtok", "Sikkim", "India", 27.3389, 88.6065),
+    ("Shillong", "Meghalaya", "India", 25.5788, 91.8933),
+]
+
+CITIES = CITIES + INDIA_CITIES
+
 TITLE_TEMPLATES = [
     "Sunlit {ptype} in the heart of {city}",
     "Modern {ptype} with stunning views near {city}",

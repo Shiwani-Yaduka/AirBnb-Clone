@@ -48,7 +48,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      // Skip for FormData (file uploads) — the browser must set its own
+      // multipart/form-data boundary, which a hardcoded header would break.
+      ...(options.body && !(options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -113,6 +115,8 @@ export const listingsApi = {
     request<ListingSearchResult>(`/listings${buildQuery(params)}`),
   homeSections: (listingType?: string) =>
     request<CitySection[]>(`/listings/home-sections${buildQuery({ listing_type: listingType })}`),
+  forMap: (listingType?: string, location?: string) =>
+    request<ListingCard[]>(`/listings/map${buildQuery({ listing_type: listingType, location })}`),
   get: (id: number) => request<ListingDetail>(`/listings/${id}`),
   availability: (id: number) =>
     request<{ booked_ranges: BookedRange[] }>(`/listings/${id}/availability`),
@@ -135,11 +139,21 @@ export const bookingsApi = {
     }),
   myTrips: () => request<BookingWithListing[]>("/bookings/me"),
   cancel: (id: number) => request<Booking>(`/bookings/${id}/cancel`, { method: "PATCH" }),
-  review: (bookingId: number, rating: number, comment: string) =>
+  review: (bookingId: number, rating: number, comment: string, photoUrls: string[] = []) =>
     request<Review>(`/bookings/${bookingId}/review`, {
       method: "POST",
-      body: JSON.stringify({ rating, comment }),
+      body: JSON.stringify({ rating, comment, photo_urls: photoUrls }),
     }),
+};
+
+// ---------- Uploads ----------
+
+export const uploadsApi = {
+  reviewPhoto: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{ url: string }>("/uploads/review-photo", { method: "POST", body: formData });
+  },
 };
 
 // ---------- Users / host / favorites ----------

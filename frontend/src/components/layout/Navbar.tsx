@@ -123,38 +123,46 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-line bg-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 pt-4 sm:px-8">
+        <div className="relative mx-auto flex max-w-7xl items-center gap-4 px-4 pt-4 sm:px-8">
           <Link href="/" className="flex shrink-0 items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/images/Airbnb-logo.png" alt="Airbnb" className="h-8 w-auto" />
           </Link>
 
-          <nav
-            className={`hidden flex-1 items-center justify-center gap-8 overflow-hidden transition-all duration-300 md:flex ${
-              shrink ? "max-h-0 -translate-y-2 opacity-0" : "max-h-20 translate-y-0 opacity-100"
-            }`}
-          >
-            <Suspense fallback={null}>
-              <NavTabButtons variant="desktop" />
-            </Suspense>
-          </nav>
+          {/* Absolutely centered on the header row (not the leftover space next to the
+              logo/account controls), matching Airbnb's real header, whose widths differ
+              on each side. A plain inset-0 flex-center wrapper (no transform) so it
+              doesn't fight the nav's own translate-y slide/fade animation below. */}
+          <div className="absolute inset-0 hidden items-center justify-center md:flex">
+            <nav
+              className={`flex items-center gap-8 overflow-hidden transition-all duration-300 ${
+                shrink ? "max-h-0 -translate-y-2 opacity-0" : "max-h-20 translate-y-0 opacity-100"
+              }`}
+            >
+              <Suspense fallback={null}>
+                <NavTabButtons variant="desktop" />
+              </Suspense>
+            </nav>
+          </div>
 
           {shrink && (
-            <button
-              onClick={() => setMobileSearchOpen(true)}
-              className="hidden flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white py-2.5 pl-4 pr-2 text-sm font-medium shadow-sm transition hover:shadow-md md:flex"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/images/home.png" alt="" className="h-5 w-5 object-contain" />
-              <span className="text-neutral-900">{"Anywhere"}</span>
-              <span className="text-neutral-300">|</span>
-              <span className="text-neutral-900">{"Anytime"}</span>
-              <span className="text-neutral-300">|</span>
-              <span className="text-neutral-500">Add guests</span>
-              <span className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm text-white">
-                🔍
-              </span>
-            </button>
+            <div className="absolute inset-0 hidden items-center justify-center md:flex">
+              <button
+                onClick={() => setMobileSearchOpen(true)}
+                className="flex items-center gap-2 rounded-full border border-line bg-white py-2.5 pl-4 pr-2 text-sm font-medium shadow-sm transition hover:shadow-md"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/assets/images/home.png" alt="" className="h-5 w-5 object-contain" />
+                <span className="text-neutral-900">{"Anywhere"}</span>
+                <span className="text-neutral-300">|</span>
+                <span className="text-neutral-900">{"Anytime"}</span>
+                <span className="text-neutral-300">|</span>
+                <span className="text-neutral-500">Add guests</span>
+                <span className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm text-white">
+                  🔍
+                </span>
+              </button>
+            </div>
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-3 pb-4">

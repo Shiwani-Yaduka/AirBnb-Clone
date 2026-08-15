@@ -190,8 +190,22 @@ class Review(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     listing: Mapped["Listing"] = relationship(back_populates="reviews")
+    photos: Mapped[list["ReviewPhoto"]] = relationship(
+        back_populates="review", cascade="all, delete-orphan", order_by="ReviewPhoto.sort_order"
+    )
     booking: Mapped["Booking"] = relationship(back_populates="review")
     guest: Mapped["User"] = relationship(back_populates="reviews")
+
+
+class ReviewPhoto(Base):
+    __tablename__ = "review_photos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    review_id: Mapped[int] = mapped_column(ForeignKey("reviews.id"), nullable=False)
+    url: Mapped[str] = mapped_column(String(1000), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+
+    review: Mapped["Review"] = relationship(back_populates="photos")
 
 
 class Favorite(Base):

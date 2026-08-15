@@ -6,6 +6,14 @@
   --color-primary: #ff385c;
   --color-primary-dark: #d70466;
   --color-border: #dddddd;
+  /* shadcn/ui tokens, needed by vendored shadcn-style components (components/ui/map.tsx) */
+  --accent: #f5f5f5;
+  --accent-foreground: #222222;
+  --ring: #222222;
+  --muted: #f5f5f5;
+  --muted-foreground: #717171;
+  --popover: #ffffff;
+  --popover-foreground: #222222;
 }
 
 @theme inline {
@@ -14,6 +22,14 @@
   --color-brand: var(--color-primary);
   --color-brand-dark: var(--color-primary-dark);
   --color-line: var(--color-border);
+  --color-border: #dddddd;
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -24,68 +40,29 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  border-radius: 0.75rem;
-}
-
-/* Leaflet's own stylesheet gives its panes/controls z-index up to 1000, which isn't
-   scoped to a sub-stacking-context — so it paints over any of our modals (z-50) or
-   the sticky navbar (z-40). Cap it well below our UI layer, keeping Leaflet's own
-   internal ordering (tiles < shadows < markers < tooltips < popups < controls) intact. */
-.leaflet-tile-pane {
-  z-index: 2 !important;
-}
-.leaflet-pane,
-.leaflet-overlay-pane {
-  z-index: 4 !important;
-}
-.leaflet-shadow-pane {
-  z-index: 5 !important;
-}
-.leaflet-marker-pane {
-  z-index: 6 !important;
-}
-.leaflet-tooltip-pane {
-  z-index: 7 !important;
-}
-.leaflet-popup-pane {
-  z-index: 8 !important;
-}
-.leaflet-control {
-  z-index: 9 !important;
-}
-.leaflet-top,
-.leaflet-bottom {
-  z-index: 10 !important;
-}
-
-/* Airbnb-style map price tags: reset Leaflet's default divIcon box, then draw our own pill. */
-.price-pin {
-  background: transparent;
-  border: none;
-}
-.price-pin-pill {
-  display: inline-block;
-  transform: translate(-50%, -100%);
-  white-space: nowrap;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  background: #ffffff;
-  color: #222222;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-.price-pin-pill:hover,
-.price-pin-pill--active {
-  background: #222222;
-  color: #ffffff;
-  transform: translate(-50%, -100%) scale(1.08);
-  z-index: 1000;
+/* mapcn's own required overrides (from its registry css block): our marker/popup
+   content is plain React/Tailwind, so strip maplibre's default popup chrome and
+   style its attribution control to match the rest of the app. */
+@layer base {
+  .maplibregl-popup-content {
+    @apply bg-transparent! p-0! shadow-none!;
+    border-radius: 0 !important;
+  }
+  .maplibregl-popup-tip {
+    display: none !important;
+  }
+  .maplibregl-ctrl-attrib {
+    @apply bg-background! text-muted-foreground! border-border! rounded-md! border! shadow-sm!;
+  }
+  .maplibregl-ctrl-attrib a {
+    @apply text-muted-foreground!;
+  }
+  .maplibregl-ctrl-attrib a:hover {
+    @apply text-foreground!;
+  }
+  .maplibregl-ctrl-attrib-button {
+    @apply bg-transparent!;
+  }
 }
 
 @keyframes toast-in {
@@ -109,4 +86,202 @@ body {
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Airbnb's "Bélo" splash mark: a stepped sprite animation (44 96px-tall frames).
+   The source PNG's artwork is white-on-transparent (designed to sit on a colored
+   page background), which is invisible on our white splash — so it's applied as
+   a mask over a solid brand-pink fill instead of as a background-image, letting
+   the mark render pink on white regardless of the source art's own color. */
+.belo-animation {
+  width: 90px;
+  height: 96px;
+  background-color: #ff385c;
+  -webkit-mask-image: url(https://a0.muscache.com/airbnb/static/homepages/belo-animation-bcd6d9a933280e6f8d50991b6e623f69.png);
+  mask-image: url(https://a0.muscache.com/airbnb/static/homepages/belo-animation-bcd6d9a933280e6f8d50991b6e623f69.png);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: step-start;
+  animation-name: belo-animation;
+}
+
+@keyframes belo-animation {
+  0% {
+    -webkit-mask-position: 0 0px;
+    mask-position: 0 0px;
+  }
+  2.32558% {
+    -webkit-mask-position: 0 -96px;
+    mask-position: 0 -96px;
+  }
+  4.65116% {
+    -webkit-mask-position: 0 -192px;
+    mask-position: 0 -192px;
+  }
+  6.97674% {
+    -webkit-mask-position: 0 -288px;
+    mask-position: 0 -288px;
+  }
+  9.30233% {
+    -webkit-mask-position: 0 -384px;
+    mask-position: 0 -384px;
+  }
+  11.62791% {
+    -webkit-mask-position: 0 -480px;
+    mask-position: 0 -480px;
+  }
+  13.95349% {
+    -webkit-mask-position: 0 -576px;
+    mask-position: 0 -576px;
+  }
+  16.27907% {
+    -webkit-mask-position: 0 -672px;
+    mask-position: 0 -672px;
+  }
+  18.60465% {
+    -webkit-mask-position: 0 -768px;
+    mask-position: 0 -768px;
+  }
+  20.93023% {
+    -webkit-mask-position: 0 -864px;
+    mask-position: 0 -864px;
+  }
+  23.25581% {
+    -webkit-mask-position: 0 -960px;
+    mask-position: 0 -960px;
+  }
+  25.5814% {
+    -webkit-mask-position: 0 -1056px;
+    mask-position: 0 -1056px;
+  }
+  27.90698% {
+    -webkit-mask-position: 0 -1152px;
+    mask-position: 0 -1152px;
+  }
+  30.23256% {
+    -webkit-mask-position: 0 -1248px;
+    mask-position: 0 -1248px;
+  }
+  32.55814% {
+    -webkit-mask-position: 0 -1344px;
+    mask-position: 0 -1344px;
+  }
+  34.88372% {
+    -webkit-mask-position: 0 -1440px;
+    mask-position: 0 -1440px;
+  }
+  37.2093% {
+    -webkit-mask-position: 0 -1536px;
+    mask-position: 0 -1536px;
+  }
+  39.53488% {
+    -webkit-mask-position: 0 -1632px;
+    mask-position: 0 -1632px;
+  }
+  41.86047% {
+    -webkit-mask-position: 0 -1728px;
+    mask-position: 0 -1728px;
+  }
+  44.18605% {
+    -webkit-mask-position: 0 -1824px;
+    mask-position: 0 -1824px;
+  }
+  46.51163% {
+    -webkit-mask-position: 0 -1920px;
+    mask-position: 0 -1920px;
+  }
+  48.83721% {
+    -webkit-mask-position: 0 -2016px;
+    mask-position: 0 -2016px;
+  }
+  51.16279% {
+    -webkit-mask-position: 0 -2112px;
+    mask-position: 0 -2112px;
+  }
+  53.48837% {
+    -webkit-mask-position: 0 -2208px;
+    mask-position: 0 -2208px;
+  }
+  55.81395% {
+    -webkit-mask-position: 0 -2304px;
+    mask-position: 0 -2304px;
+  }
+  58.13953% {
+    -webkit-mask-position: 0 -2400px;
+    mask-position: 0 -2400px;
+  }
+  60.46512% {
+    -webkit-mask-position: 0 -2496px;
+    mask-position: 0 -2496px;
+  }
+  62.7907% {
+    -webkit-mask-position: 0 -2592px;
+    mask-position: 0 -2592px;
+  }
+  65.11628% {
+    -webkit-mask-position: 0 -2688px;
+    mask-position: 0 -2688px;
+  }
+  67.44186% {
+    -webkit-mask-position: 0 -2784px;
+    mask-position: 0 -2784px;
+  }
+  69.76744% {
+    -webkit-mask-position: 0 -2880px;
+    mask-position: 0 -2880px;
+  }
+  72.09302% {
+    -webkit-mask-position: 0 -2976px;
+    mask-position: 0 -2976px;
+  }
+  74.4186% {
+    -webkit-mask-position: 0 -3072px;
+    mask-position: 0 -3072px;
+  }
+  76.74419% {
+    -webkit-mask-position: 0 -3168px;
+    mask-position: 0 -3168px;
+  }
+  79.06977% {
+    -webkit-mask-position: 0 -3264px;
+    mask-position: 0 -3264px;
+  }
+  81.39535% {
+    -webkit-mask-position: 0 -3360px;
+    mask-position: 0 -3360px;
+  }
+  83.72093% {
+    -webkit-mask-position: 0 -3456px;
+    mask-position: 0 -3456px;
+  }
+  86.04651% {
+    -webkit-mask-position: 0 -3552px;
+    mask-position: 0 -3552px;
+  }
+  88.37209% {
+    -webkit-mask-position: 0 -3648px;
+    mask-position: 0 -3648px;
+  }
+  90.69767% {
+    -webkit-mask-position: 0 -3744px;
+    mask-position: 0 -3744px;
+  }
+  93.02326% {
+    -webkit-mask-position: 0 -3840px;
+    mask-position: 0 -3840px;
+  }
+  95.34884% {
+    -webkit-mask-position: 0 -3936px;
+    mask-position: 0 -3936px;
+  }
+  97.67442% {
+    -webkit-mask-position: 0 -4032px;
+    mask-position: 0 -4032px;
+  }
+  100% {
+    -webkit-mask-position: 0 -4128px;
+    mask-position: 0 -4128px;
+  }
 }

@@ -212,6 +212,7 @@ class AvailabilityOut(BaseModel):
 class ReviewCreate(BaseModel):
     rating: int = Field(ge=1, le=5)
     comment: str = Field(min_length=1, max_length=2000)
+    photo_urls: list[str] = []
 
 
 class ReviewOut(BaseModel):
@@ -224,4 +225,5 @@ class ReviewOut(BaseModel):
     guest_avatar_url: str | None
     rating: int
     comment: str
+    photo_urls: list[str]
     created_at: datetime

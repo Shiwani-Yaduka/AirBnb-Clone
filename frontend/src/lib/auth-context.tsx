@@ -14,6 +14,12 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const LAST_ACTIVE_KEY = "abc_last_active_at";
+// Clerk's own session can otherwise stay silently valid for a long time (its default
+// inactivity/lifetime limits are generous). This enforces a shorter, app-level idle
+// timeout so reopening the browser after a long gap requires signing in again.
+const SESSION_IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 // Bridges Clerk's session state to our own backend: once Clerk reports a signed-in
 // user, /auth/me syncs (and returns) the corresponding local User row, which carries
 // app-specific fields Clerk doesn't know about (is_superhost, bio, etc.).
@@ -28,17 +34,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isSignedIn) {
       setUser(null);
       setIsLoading(false);
+      localStorage.removeItem(LAST_ACTIVE_KEY);
       return;
     }
+
+    const lastActive = Number(localStorage.getItem(LAST_ACTIVE_KEY) ?? 0);
+    if (lastActive && Date.now() - lastActive > SESSION_IDLE_TIMEOUT_MS) {
+      localStorage.removeItem(LAST_ACTIVE_KEY);
+      setUser(null);
+      setIsLoading(false);
+      signOut();
+      return;
+    }
+
     setIsLoading(true);
     authApi
       .me()
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, signOut]);
+
+  // Keep the "last active" timestamp fresh while signed in, so the idle clock only
+  // starts accumulating once the tab/browser is actually closed or left untouched.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const touch = () => localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+    touch();
+    const interval = setInterval(touch, 60_000);
+    document.addEventListener("visibilitychange", touch);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", touch);
+    };
+  }, [isSignedIn]);
 
   const logout = useCallback(async () => {
+    localStorage.removeItem(LAST_ACTIVE_KEY);
     await signOut();
     setUser(null);
   }, [signOut]);
