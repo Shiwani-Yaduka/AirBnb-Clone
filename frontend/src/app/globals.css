@@ -30,6 +30,37 @@ body {
   border-radius: 0.75rem;
 }
 
+/* Leaflet's own stylesheet gives its panes/controls z-index up to 1000, which isn't
+   scoped to a sub-stacking-context — so it paints over any of our modals (z-50) or
+   the sticky navbar (z-40). Cap it well below our UI layer, keeping Leaflet's own
+   internal ordering (tiles < shadows < markers < tooltips < popups < controls) intact. */
+.leaflet-tile-pane {
+  z-index: 2 !important;
+}
+.leaflet-pane,
+.leaflet-overlay-pane {
+  z-index: 4 !important;
+}
+.leaflet-shadow-pane {
+  z-index: 5 !important;
+}
+.leaflet-marker-pane {
+  z-index: 6 !important;
+}
+.leaflet-tooltip-pane {
+  z-index: 7 !important;
+}
+.leaflet-popup-pane {
+  z-index: 8 !important;
+}
+.leaflet-control {
+  z-index: 9 !important;
+}
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
 /* Airbnb-style map price tags: reset Leaflet's default divIcon box, then draw our own pill. */
 .price-pin {
   background: transparent;

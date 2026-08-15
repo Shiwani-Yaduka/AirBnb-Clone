@@ -62,7 +62,7 @@ function NavTabButtons({ variant }: { variant: "desktop" | "mobile" }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={icon} alt="" className="h-6 w-6 object-contain" />
             ) : (
-              <GlobeIcon className="h-5 w-5" />
+              <GlobeIcon className="h-6 w-6" />
             )}
             {label}
           </button>
@@ -87,7 +87,7 @@ function NavTabButtons({ variant }: { variant: "desktop" | "mobile" }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={icon} alt="" className="h-7 w-7 object-contain" />
           ) : (
-            <GlobeIcon className="h-6 w-6" />
+            <GlobeIcon className="h-7 w-7" />
           )}
           {label}
         </button>
@@ -200,7 +200,7 @@ export function Navbar() {
           </div>
         )}
 
-        <nav className="scrollbar-none flex gap-6 overflow-x-auto border-t border-line px-4 py-3 md:hidden">
+        <nav className="scrollbar-none flex justify-center gap-8 overflow-x-auto border-t border-line px-4 py-3 md:hidden">
           <Suspense fallback={null}>
             <NavTabButtons variant="mobile" />
           </Suspense>

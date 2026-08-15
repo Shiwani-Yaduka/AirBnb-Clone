@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,6 +12,13 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" }: ModalProps) {
+  // Modals can be opened from inside position:sticky ancestors (e.g. the booking
+  // sidebar), which always create their own stacking context and would trap a
+  // plain nested `fixed` element behind unrelated positioned content elsewhere
+  // on the page. Portaling straight to <body> escapes any such ancestor.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -22,9 +30,9 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" 
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
@@ -42,6 +50,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" 
         </div>
         <div className="p-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
